@@ -8,7 +8,7 @@ from types import StringTypes, IntType, FloatType
 
 class AbstractMetric(object):
     def __init__(self, name):
-        self._set_name(name)
+        self.name = name
 
     @property
     def name(self):
@@ -16,9 +16,6 @@ class AbstractMetric(object):
 
     @name.setter
     def name(self, name):
-        self._set_name(name)
-
-    def _set_name(self, name):
         assert type(name) in StringTypes, 'Metric name should be string'
         assert name != '', 'Metric name should not be empty'
         self._name = name
