@@ -60,7 +60,7 @@ if distutilazy:
     setup_params['cmdclass'] = dict(
         test=distutilazy.test.run_tests,
         clean_pyc=distutilazy.clean.clean_pyc,
-        clean_all=distutilazy.clean.clean_all
+        clean=distutilazy.clean.clean_all
     )
 elif setuptools:
     setup_params['test_suite'] = 'tests'
