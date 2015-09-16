@@ -1,22 +1,24 @@
 """
 statsd_metrics.metrics
 ----------------------
-Define metrics classes
+Define metric classes
 """
 
 from re import compile, sub
 from types import StringTypes, IntType, FloatType
 
-normalize_metric_names_regexes = (
+normalize_metric_name_regexes = (
     (compile("\s+"), "_"),
     (compile("[\/\\\\]"), "-"),
     (compile("[^\w.-]"), ""),
 )
 
+
 def normalize_metric_name(name):
-    for regex, replacement in normalize_metric_names_regexes:
+    for regex, replacement in normalize_metric_name_regexes:
         name = sub(regex, replacement, name)
     return name
+
 
 class AbstractMetric(object):
     def __init__(self, name):
@@ -42,6 +44,7 @@ class AbstractMetric(object):
         assert value > 0, 'Metric sample rate should be positive'
         self._sample_rate = value
 
+
 class Counter(AbstractMetric):
     def __init__(self, name, count=0, sample_rate=1.0):
         super(Counter, self).__init__(name)
@@ -62,6 +65,7 @@ class Counter(AbstractMetric):
         if self._sample_rate != 1.0:
             result += "@{:.1}".format(self._sample_rate)
         return result
+
 
 class Timer(AbstractMetric):
     def __init__(self, name, milliseconds, sample_rate=1.0):
@@ -84,5 +88,6 @@ class Timer(AbstractMetric):
         if self._sample_rate != 1.0:
             result += "@{:.1}".format(self._sample_rate)
         return result
+
 
 __all__ = (normalize_metric_name, Counter, Timer)
