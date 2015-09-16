@@ -90,4 +90,27 @@ class Timer(AbstractMetric):
         return result
 
 
-__all__ = (normalize_metric_name, Counter, Timer)
+class Gauge(AbstractMetric):
+    def __init__(self, name, value, sample_rate=1.0):
+        self._value = 0
+        super(Gauge, self).__init__(name)
+        self.value= value
+        self.sample_rate = sample_rate
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        assert type(value) in (FloatType, IntType), 'Gauge value should be numeric'
+        assert value >= 0, 'Gauge value should not be negative'
+        self._value = value
+
+    def to_request(self):
+        result = "{0}:{1}|g".format(self._name, self._value)
+        if self._sample_rate != 1.0:
+            result += "@{:.1}".format(self._sample_rate)
+        return result
+
+__all__ = (Counter, Timer, Gauge, normalize_metric_name)

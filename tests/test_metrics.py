@@ -1,12 +1,13 @@
 """
 tests.test_metrics
 ------------------
-unit tests for module functions
-metric classes.
+unit tests for module functions metric classes.
 """
 
 import unittest
-from statsd_metrics import (Counter, Timer, normalize_metric_name)
+from statsd_metrics import (Counter, Timer,
+                            Gauge, normalize_metric_name)
+
 
 class TestMetrics(unittest.TestCase):
     def test_normalize_metric_names_keeps_good_names(self):
@@ -58,8 +59,10 @@ class TestCounter(unittest.TestCase):
     def test_count_should_be_integer(self):
         self.assertRaises(AssertionError, Counter, 'test', 1.2)
         counter = Counter('ok')
+
         def set_string_as_count():
             counter.count = 'not integer'
+
         self.assertRaises(AssertionError, set_string_as_count)
         counter.count = 2
         self.assertEqual(counter.count, 2)
@@ -67,8 +70,10 @@ class TestCounter(unittest.TestCase):
     def test_sample_rate_should_be_float(self):
         self.assertRaises(AssertionError, Counter, 'test', 1, 's')
         counter = Counter('ok')
+
         def set_int_as_sample_rate():
             counter.sample_rate = 7
+
         self.assertRaises(AssertionError, set_int_as_sample_rate)
         counter.sample_rate = 0.3
         self.assertEqual(counter.sample_rate, 0.3)
@@ -85,6 +90,7 @@ class TestCounter(unittest.TestCase):
 
         counter3 = Counter('again', -2, 0.7)
         self.assertEqual(counter3.to_request(), 'again:-2|c@0.7')
+
 
 class TestTimer(unittest.TestCase):
     def test_metric_requires_a_non_empty_string_name(self):
@@ -104,8 +110,10 @@ class TestTimer(unittest.TestCase):
     def test_millisecond_should_be_float(self):
         self.assertRaises(AssertionError, Timer, 'test', 1)
         timer = Timer('ok', 0.3)
+
         def set_string_as_millisecond():
             timer.count = 'not float'
+
         self.assertRaises(AssertionError, set_string_as_millisecond())
         timer.milliseconds = 2.0
         self.assertEqual(timer.milliseconds, 2.0)
@@ -118,8 +126,10 @@ class TestTimer(unittest.TestCase):
     def test_sample_rate_should_be_float(self):
         self.assertRaises(AssertionError, Timer, 'test', 1.0, 's')
         timer = Timer('ok', 0.1)
+
         def set_int_as_sample_rate():
             timer.sample_rate = 7
+
         self.assertRaises(AssertionError, set_int_as_sample_rate)
         timer.sample_rate = 0.3
         self.assertEqual(timer.sample_rate, 0.3)
@@ -136,6 +146,54 @@ class TestTimer(unittest.TestCase):
 
         timer3 = Timer('again', 12.3, 0.8)
         self.assertEqual(timer3.to_request(), 'again:12.3|ms@0.8')
+
+
+class TestGauge(unittest.TestCase):
+    def test_constructor(self):
+        gauge = Gauge('test', 5, 0.2)
+        self.assertEquals(gauge.name, 'test')
+        self.assertEquals(gauge.value, 5)
+        self.assertEquals(gauge.sample_rate, 0.2)
+
+    def test_metric_requires_a_non_empty_string_name(self):
+        self.assertRaises(AssertionError, Gauge, 0, 1)
+        self.assertRaises(AssertionError, Gauge, '', 2)
+
+    def test_default_sample_rate_is_one(self):
+        gauge = Gauge('test', 3)
+        self.assertEquals(gauge.sample_rate, 1.0)
+
+    def test_value_should_be_numeric(self):
+        self.assertRaises(AssertionError, Gauge, 'string_val', '')
+        gauge = Gauge('ok', 0.3)
+
+        def set_value_as_string():
+            gauge.value = 'not float'
+
+        self.assertRaises(AssertionError, set_value_as_string)
+        gauge.value = 2.0
+        self.assertEqual(gauge.value, 2.0)
+        gauge.value = 63
+        self.assertEqual(gauge.value, 63)
+
+    def test_value_should_not_be_negative(self):
+        self.assertRaises(AssertionError, Gauge, 'test', -2)
+        gauge = Gauge('ok', 0)
+
+        def set_negative_value():
+            gauge.value = -4.5
+
+        self.assertRaises(AssertionError, set_negative_value)
+
+    def test_to_request(self):
+        gauge = Gauge('ok', 0.2)
+        self.assertEqual(gauge.to_request(), 'ok:0.2|g')
+
+        gauge2 = Gauge('another', 237)
+        self.assertEqual(gauge2.to_request(), 'another:237|g')
+
+        gauge3 = Gauge('again', 11.8, 0.4)
+        self.assertEqual(gauge3.to_request(), 'again:11.8|g@0.4')
 
 if __name__ == '__main__':
     unittest.main()
