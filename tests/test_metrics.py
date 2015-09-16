@@ -127,5 +127,15 @@ class TestTimer(unittest.TestCase):
     def test_sample_rate_should_be_positive(self):
         self.assertRaises(AssertionError, Timer, 'test', 1.2, -4.0)
 
+    def test_to_request(self):
+        timer = Timer('ok', 0.2)
+        self.assertEqual(timer.to_request(), 'ok:0.2|ms')
+
+        timer2 = Timer('another', 45.2)
+        self.assertEqual(timer2.to_request(), 'another:45.2|ms')
+
+        timer3 = Timer('again', 12.3, 0.8)
+        self.assertEqual(timer3.to_request(), 'again:12.3|ms@0.8')
+
 if __name__ == '__main__':
     unittest.main()

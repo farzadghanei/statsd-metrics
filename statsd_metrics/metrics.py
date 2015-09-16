@@ -79,4 +79,10 @@ class Timer(AbstractMetric):
         assert milliseconds >= 0, 'Timer milliseconds should not be negative'
         self._milliseconds = milliseconds
 
+    def to_request(self):
+        result = "{0}:{1}|ms".format(self._name, self._milliseconds)
+        if self._sample_rate != 1.0:
+            result += "@{:.1}".format(self._sample_rate)
+        return result
+
 __all__ = (normalize_metric_name, Counter, Timer)

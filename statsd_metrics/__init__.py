@@ -1,7 +1,6 @@
 """
-    statsd_metrics
-    --------------
-
+statsd_metrics
+--------------
 Data metrics for Statsd.
 
 :license: relased under the terms of the MIT license.
