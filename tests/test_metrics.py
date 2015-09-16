@@ -2,10 +2,11 @@
 tests.test_metrics
 ------------------
 unit tests for module functions
+metric classes.
 """
 
 import unittest
-from statsd_metrics import (Counter, normalize_metric_name)
+from statsd_metrics import (Counter, Timer, normalize_metric_name)
 
 class TestMetrics(unittest.TestCase):
     def test_normalize_metric_names_keeps_good_names(self):
@@ -32,7 +33,7 @@ class TestMetrics(unittest.TestCase):
             normalize_metric_name("#+name?with~invalid!chars(and)all*&")
         )
 
-class CounterTestCase(unittest.TestCase):
+class TestCounter(unittest.TestCase):
     def test_metric_requires_a_non_empty_string_name(self):
         self.assertRaises(AssertionError, Counter, 0)
         self.assertRaises(AssertionError, Counter, '')
@@ -75,7 +76,7 @@ class CounterTestCase(unittest.TestCase):
     def test_sample_rate_should_be_positive(self):
         self.assertRaises(AssertionError, Counter, 'test', 1, -4.0)
 
-    def test_string_value(self):
+    def test_to_request(self):
         counter = Counter('something')
         self.assertEqual(counter.to_request(), 'something:0|c')
 
@@ -84,6 +85,42 @@ class CounterTestCase(unittest.TestCase):
 
         counter3 = Counter('again', -2, 0.7)
         self.assertEqual(counter3.to_request(), 'again:-2|c@0.7')
+
+class TestTimer(unittest.TestCase):
+    def test_metric_requires_a_non_empty_string_name(self):
+        self.assertRaises(AssertionError, Timer, 0, 0.1)
+        self.assertRaises(AssertionError, Timer, '', 0.1)
+
+    def test_default_sample_rate_is_one(self):
+        timer = Timer('test', 0.1)
+        self.assertEquals(timer.sample_rate, 1.0)
+
+    def test_constructor(self):
+        timer = Timer('test', 5.1, 0.2)
+        self.assertEquals(timer.name, 'test')
+        self.assertEquals(timer.milliseconds, 5.1)
+        self.assertEquals(timer.sample_rate, 0.2)
+
+    def test_millisecond_should_be_float(self):
+        self.assertRaises(AssertionError, Timer, 'test', 1)
+        timer = Timer('ok', 0.3)
+        def set_string_as_millisecond():
+            timer.count = 'not float'
+        self.assertRaises(AssertionError, set_string_as_millisecond())
+        timer.milliseconds = 2.0
+        self.assertEqual(timer.milliseconds, 2.0)
+
+    def test_sample_rate_should_be_float(self):
+        self.assertRaises(AssertionError, Timer, 'test', 1.0, 's')
+        timer = Timer('ok', 0.1)
+        def set_int_as_sample_rate():
+            timer.sample_rate = 7
+        self.assertRaises(AssertionError, set_int_as_sample_rate)
+        timer.sample_rate = 0.3
+        self.assertEqual(timer.sample_rate, 0.3)
+
+    def test_sample_rate_should_be_positive(self):
+        self.assertRaises(AssertionError, Timer, 'test', 1.2, -4.0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -63,4 +63,20 @@ class Counter(AbstractMetric):
             result += "@{:.1}".format(self._sample_rate)
         return result
 
+class Timer(AbstractMetric):
+    def __init__(self, name, milliseconds, sample_rate=1.0):
+        super(Timer, self).__init__(name)
+        self.milliseconds = milliseconds
+        self.sample_rate = sample_rate
+
+    @property
+    def milliseconds(self):
+        return self._milliseconds
+
+    @milliseconds.setter
+    def milliseconds(self, milliseconds):
+        assert type(milliseconds) is FloatType, 'Timer milliseconds should be float'
+        assert milliseconds >= 0, 'Timer milliseconds should not be negative'
+        self._milliseconds = milliseconds
+
 __all__ = (normalize_metric_name, Counter,)
