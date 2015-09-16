@@ -22,6 +22,8 @@ def normalize_metric_name(name):
 
 class AbstractMetric(object):
     def __init__(self, name):
+        self._name = ''
+        self._sample_rate = 1
         self.name = name
 
     @property
@@ -40,13 +42,13 @@ class AbstractMetric(object):
 
     @sample_rate.setter
     def sample_rate(self, value):
-        assert type(value) is FloatType, 'Metric sample rate should be float'
+        assert type(value) in (FloatType, IntType) , 'Metric sample rate should be numeric'
         assert value > 0, 'Metric sample rate should be positive'
         self._sample_rate = value
 
 
 class Counter(AbstractMetric):
-    def __init__(self, name, count=0, sample_rate=1.0):
+    def __init__(self, name, count=0, sample_rate=1):
         super(Counter, self).__init__(name)
         self.count = count
         self.sample_rate = sample_rate
@@ -63,12 +65,12 @@ class Counter(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|c".format(self._name, self._count)
         if self._sample_rate != 1.0:
-            result += "@{:.1}".format(self._sample_rate)
+            result += "|@{:.1}".format(self._sample_rate)
         return result
 
 
 class Timer(AbstractMetric):
-    def __init__(self, name, milliseconds, sample_rate=1.0):
+    def __init__(self, name, milliseconds, sample_rate=1):
         super(Timer, self).__init__(name)
         self.milliseconds = milliseconds
         self.sample_rate = sample_rate
@@ -86,12 +88,12 @@ class Timer(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|ms".format(self._name, self._milliseconds)
         if self._sample_rate != 1.0:
-            result += "@{:.1}".format(self._sample_rate)
+            result += "|@{:.1}".format(self._sample_rate)
         return result
 
 
 class Gauge(AbstractMetric):
-    def __init__(self, name, value, sample_rate=1.0):
+    def __init__(self, name, value, sample_rate=1):
         self._value = 0
         super(Gauge, self).__init__(name)
         self.value= value
@@ -110,7 +112,7 @@ class Gauge(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|g".format(self._name, self._value)
         if self._sample_rate != 1.0:
-            result += "@{:.1}".format(self._sample_rate)
+            result += "|@{:.1}".format(self._sample_rate)
         return result
 
 __all__ = (Counter, Timer, Gauge, normalize_metric_name)
