@@ -71,7 +71,7 @@ class Counter(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|c".format(self._name, self._count)
         if self._sample_rate != 1:
-            result += "|@{:.1}".format(self._sample_rate)
+            result += "|@{:n}".format(self._sample_rate)
         return result
 
 
@@ -97,7 +97,7 @@ class Timer(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|ms".format(self._name, self._milliseconds)
         if self._sample_rate != 1:
-            result += "|@{:.1}".format(self._sample_rate)
+            result += "|@{:n}".format(self._sample_rate)
         return result
 
 
@@ -105,7 +105,7 @@ class Gauge(AbstractMetric):
     def __init__(self, name, value, sample_rate=1):
         self._value = 0
         super(Gauge, self).__init__(name)
-        self.value= value
+        self.value = value
         self.sample_rate = sample_rate
 
     @property
@@ -123,7 +123,7 @@ class Gauge(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|g".format(self._name, self._value)
         if self._sample_rate != 1:
-            result += "|@{:.1}".format(self._sample_rate)
+            result += "|@{:n}".format(self._sample_rate)
         return result
 
 
@@ -131,7 +131,7 @@ class Set(AbstractMetric):
     def __init__(self, name, value):
         self._value = 0
         super(Set, self).__init__(name)
-        self.value= value
+        self.value = value
 
     @property
     def value(self):
@@ -152,8 +152,33 @@ class Set(AbstractMetric):
     def to_request(self):
         result = "{0}:{1}|s".format(self._name, self._value)
         if self._sample_rate != 1:
-                result += "|@{:.1}".format(self._sample_rate)
+                result += "|@{:n}".format(self._sample_rate)
+        return result
+
+
+class GaugeDelta(AbstractMetric):
+    def __init__(self, name, delta, sample_rate=1):
+        self._delta = 0
+        super(GaugeDelta, self).__init__(name)
+        self.delta = delta
+        self.sample_rate = sample_rate
+
+    @property
+    def delta(self):
+        return self._delta
+
+    @delta.setter
+    def delta(self, delta):
+        assert type(delta) in (FloatType, IntType),\
+            'Gauge delta should be numeric'
+        self._delta = delta
+
+    def to_request(self):
+        result = "{}:{:+n}|g".format(self._name, self._delta)
+        if self._sample_rate != 1:
+                result += "|@{:n}".format(self._sample_rate)
         return result
 
 __all__ = (Counter, Timer, Gauge,
-           Set, normalize_metric_name)
+           Set, GaugeDelta,
+           normalize_metric_name)

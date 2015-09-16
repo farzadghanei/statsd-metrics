@@ -6,7 +6,7 @@ unit tests for module functions metric classes.
 
 import unittest
 from statsd_metrics import (Counter, Timer,
-                            Gauge, Set,
+                            Gauge, Set, GaugeDelta,
                             normalize_metric_name)
 
 
@@ -219,6 +219,31 @@ class TestSet(unittest.TestCase):
         self.assertEqual(set_.value, 2.0)
         set_.value = 'something hashable'
         self.assertEqual(set_.value, 'something hashable')
+
+
+class TestGaugeDelta(unittest.TestCase):
+    def test_constructor(self):
+        gauge_delta = GaugeDelta('unique', 5)
+        self.assertEquals(gauge_delta.name, 'unique')
+        self.assertEquals(gauge_delta.delta, 5)
+
+    def test_delta_should_be_numeric(self):
+        self.assertRaises(AssertionError, GaugeDelta, 'string_val', '')
+        gauge_delta = GaugeDelta('ok', 0.3)
+        gauge_delta.delta = 2.0
+        self.assertEqual(gauge_delta.delta, 2.0)
+        gauge_delta.delta = 27
+        self.assertEqual(gauge_delta.delta, 27)
+
+    def test_to_request(self):
+        gauge_delta = GaugeDelta('ok', 0.2)
+        self.assertEqual(gauge_delta.to_request(), 'ok:+0.2|g')
+
+        gauge_delta2 = GaugeDelta('another', -43)
+        self.assertEqual(gauge_delta2.to_request(), 'another:-43|g')
+
+        gauge_delta3 = GaugeDelta('again', 15, 0.4)
+        self.assertEqual(gauge_delta3.to_request(), 'again:+15|g|@0.4')
 
 if __name__ == '__main__':
     unittest.main()
