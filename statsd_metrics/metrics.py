@@ -70,7 +70,7 @@ class Counter(AbstractMetric):
 
     def to_request(self):
         result = "{0}:{1}|c".format(self._name, self._count)
-        if self._sample_rate != 1.0:
+        if self._sample_rate != 1:
             result += "|@{:.1}".format(self._sample_rate)
         return result
 
@@ -96,7 +96,7 @@ class Timer(AbstractMetric):
 
     def to_request(self):
         result = "{0}:{1}|ms".format(self._name, self._milliseconds)
-        if self._sample_rate != 1.0:
+        if self._sample_rate != 1:
             result += "|@{:.1}".format(self._sample_rate)
         return result
 
@@ -122,8 +122,38 @@ class Gauge(AbstractMetric):
 
     def to_request(self):
         result = "{0}:{1}|g".format(self._name, self._value)
-        if self._sample_rate != 1.0:
+        if self._sample_rate != 1:
             result += "|@{:.1}".format(self._sample_rate)
         return result
 
-__all__ = (Counter, Timer, Gauge, normalize_metric_name)
+
+class Set(AbstractMetric):
+    def __init__(self, name, value):
+        self._value = 0
+        super(Set, self).__init__(name)
+        self.value= value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        try:
+            str(value)
+        except (TypeError, ValueError):
+            raise AssertionError("Set value should be convertible to string")
+        try:
+            hash(value)
+        except (TypeError, ValueError):
+            raise AssertionError("Set value should be hashable")
+        self._value = value
+
+    def to_request(self):
+        result = "{0}:{1}|s".format(self._name, self._value)
+        if self._sample_rate != 1:
+                result += "|@{:.1}".format(self._sample_rate)
+        return result
+
+__all__ = (Counter, Timer, Gauge,
+           Set, normalize_metric_name)

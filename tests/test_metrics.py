@@ -6,7 +6,8 @@ unit tests for module functions metric classes.
 
 import unittest
 from statsd_metrics import (Counter, Timer,
-                            Gauge, normalize_metric_name)
+                            Gauge, Set,
+                            normalize_metric_name)
 
 
 class TestMetrics(unittest.TestCase):
@@ -199,6 +200,25 @@ class TestGauge(unittest.TestCase):
 
         gauge3 = Gauge('again', 11.8, 0.4)
         self.assertEqual(gauge3.to_request(), 'again:11.8|g|@0.4')
+
+
+class TestSet(unittest.TestCase):
+    def test_constructor(self):
+        set_ = Set('unique', 5)
+        self.assertEquals(set_.name, 'unique')
+        self.assertEquals(set_.value, 5)
+
+    def test_metric_requires_a_non_empty_string_name(self):
+        self.assertRaises(AssertionError, Set, 0, 1)
+        self.assertRaises(AssertionError, Set, '', 2)
+
+    def test_value_should_be_hashable(self):
+        self.assertRaises(AssertionError, Set, 'not_hashable', [])
+        set_ = Set('ok', 4)
+        set_.value = 2.0
+        self.assertEqual(set_.value, 2.0)
+        set_.value = 'something hashable'
+        self.assertEqual(set_.value, 'something hashable')
 
 if __name__ == '__main__':
     unittest.main()
