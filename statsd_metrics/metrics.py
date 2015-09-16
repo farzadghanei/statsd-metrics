@@ -79,4 +79,4 @@ class Timer(AbstractMetric):
         assert milliseconds >= 0, 'Timer milliseconds should not be negative'
         self._milliseconds = milliseconds
 
-__all__ = (normalize_metric_name, Counter,)
+__all__ = (normalize_metric_name, Counter, Timer)

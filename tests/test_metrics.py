@@ -110,6 +110,11 @@ class TestTimer(unittest.TestCase):
         timer.milliseconds = 2.0
         self.assertEqual(timer.milliseconds, 2.0)
 
+    def test_millisecond_should_not_be_negative(self):
+        self.assertRaises(AssertionError, Timer, 'test', -4.2)
+        timer = Timer('ok', 0.0)
+        self.assertEqual(timer.milliseconds, 0.0)
+
     def test_sample_rate_should_be_float(self):
         self.assertRaises(AssertionError, Timer, 'test', 1.0, 's')
         timer = Timer('ok', 0.1)
