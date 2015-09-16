@@ -5,7 +5,27 @@ Define metric classes
 """
 
 from re import compile, sub
-from types import StringTypes, IntType, FloatType
+
+try:
+    unicode('')
+except NameError:
+    unicode = str
+
+try:
+    long(1)
+except NameError:
+    long = int
+
+
+def is_string(value):
+    return isinstance(value, str) or\
+           isinstance(value, unicode)
+
+
+def is_numeric(value):
+    return isinstance(value, int) or\
+           isinstance(value, float) or\
+           isinstance(value, long)
 
 normalize_metric_name_regexes = (
     (compile("\s+"), "_"),
@@ -32,7 +52,7 @@ class AbstractMetric(object):
 
     @name.setter
     def name(self, name):
-        assert type(name) in StringTypes,\
+        assert is_string(name),\
             'Metric name should be string'
         assert name != '',\
             'Metric name should not be empty'
@@ -44,7 +64,7 @@ class AbstractMetric(object):
 
     @sample_rate.setter
     def sample_rate(self, value):
-        assert type(value) in (FloatType, IntType),\
+        assert is_numeric(value),\
             'Metric sample rate should be numeric'
         assert value > 0,\
             'Metric sample rate should be positive'
@@ -64,7 +84,7 @@ class Counter(AbstractMetric):
 
     @count.setter
     def count(self, count):
-        assert type(count) is IntType,\
+        assert isinstance(count, int),\
             'Counter count should be integer'
         self._count = count
 
@@ -88,7 +108,7 @@ class Timer(AbstractMetric):
 
     @milliseconds.setter
     def milliseconds(self, milliseconds):
-        assert type(milliseconds) in (FloatType, IntType),\
+        assert is_numeric(milliseconds),\
             'Timer milliseconds should be numeric'
         assert milliseconds >= 0,\
             'Timer milliseconds should not be negative'
@@ -114,7 +134,7 @@ class Gauge(AbstractMetric):
 
     @value.setter
     def value(self, value):
-        assert type(value) in (FloatType, IntType),\
+        assert is_numeric(value),\
             'Gauge value should be numeric'
         assert value >= 0,\
             'Gauge value should not be negative'
@@ -169,7 +189,7 @@ class GaugeDelta(AbstractMetric):
 
     @delta.setter
     def delta(self, delta):
-        assert type(delta) in (FloatType, IntType),\
+        assert is_numeric(delta),\
             'Gauge delta should be numeric'
         self._delta = delta
 

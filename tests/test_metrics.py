@@ -39,12 +39,12 @@ class TestMetrics(unittest.TestCase):
 class TestCounter(unittest.TestCase):
     def test_counter_constructor(self):
         counter = Counter('test', 5, 0.2)
-        self.assertEquals(counter.name, 'test')
-        self.assertEquals(counter.count, 5)
-        self.assertEquals(counter.sample_rate, 0.2)
+        self.assertEqual(counter.name, 'test')
+        self.assertEqual(counter.count, 5)
+        self.assertEqual(counter.sample_rate, 0.2)
 
         counter_negative = Counter('negative', -10)
-        self.assertEquals(counter_negative.count, -10)
+        self.assertEqual(counter_negative.count, -10)
 
     def test_metric_requires_a_non_empty_string_name(self):
         self.assertRaises(AssertionError, Counter, 0)
@@ -52,11 +52,11 @@ class TestCounter(unittest.TestCase):
 
     def test_counter_default_count_is_zero(self):
         counter = Counter('test')
-        self.assertEquals(counter.count, 0)
+        self.assertEqual(counter.count, 0)
 
     def test_counter_default_sample_rate_is_one(self):
         counter = Counter('test')
-        self.assertEquals(counter.sample_rate, 1)
+        self.assertEqual(counter.sample_rate, 1)
 
     def test_count_should_be_integer(self):
         self.assertRaises(AssertionError, Counter, 'test', 1.2)
@@ -95,9 +95,9 @@ class TestCounter(unittest.TestCase):
 class TestTimer(unittest.TestCase):
     def test_constructor(self):
         timer = Timer('test', 5.1, 0.2)
-        self.assertEquals(timer.name, 'test')
-        self.assertEquals(timer.milliseconds, 5.1)
-        self.assertEquals(timer.sample_rate, 0.2)
+        self.assertEqual(timer.name, 'test')
+        self.assertEqual(timer.milliseconds, 5.1)
+        self.assertEqual(timer.sample_rate, 0.2)
 
     def test_metric_requires_a_non_empty_string_name(self):
         self.assertRaises(AssertionError, Timer, 0, 0.1)
@@ -105,7 +105,7 @@ class TestTimer(unittest.TestCase):
 
     def test_default_sample_rate_is_one(self):
         timer = Timer('test', 0.1)
-        self.assertEquals(timer.sample_rate, 1)
+        self.assertEqual(timer.sample_rate, 1)
 
     def test_millisecond_should_be_numeric(self):
         self.assertRaises(AssertionError, Timer, 'test', '')
@@ -145,9 +145,9 @@ class TestTimer(unittest.TestCase):
 class TestGauge(unittest.TestCase):
     def test_constructor(self):
         gauge = Gauge('test', 5, 0.2)
-        self.assertEquals(gauge.name, 'test')
-        self.assertEquals(gauge.value, 5)
-        self.assertEquals(gauge.sample_rate, 0.2)
+        self.assertEqual(gauge.name, 'test')
+        self.assertEqual(gauge.value, 5)
+        self.assertEqual(gauge.sample_rate, 0.2)
 
     def test_metric_requires_a_non_empty_string_name(self):
         self.assertRaises(AssertionError, Gauge, 0, 1)
@@ -155,7 +155,7 @@ class TestGauge(unittest.TestCase):
 
     def test_default_sample_rate_is_one(self):
         gauge = Gauge('test', 3)
-        self.assertEquals(gauge.sample_rate, 1)
+        self.assertEqual(gauge.sample_rate, 1)
 
     def test_value_should_be_numeric(self):
         self.assertRaises(AssertionError, Gauge, 'string_val', '')
@@ -205,8 +205,8 @@ class TestGauge(unittest.TestCase):
 class TestSet(unittest.TestCase):
     def test_constructor(self):
         set_ = Set('unique', 5)
-        self.assertEquals(set_.name, 'unique')
-        self.assertEquals(set_.value, 5)
+        self.assertEqual(set_.name, 'unique')
+        self.assertEqual(set_.value, 5)
 
     def test_metric_requires_a_non_empty_string_name(self):
         self.assertRaises(AssertionError, Set, 0, 1)
@@ -224,8 +224,8 @@ class TestSet(unittest.TestCase):
 class TestGaugeDelta(unittest.TestCase):
     def test_constructor(self):
         gauge_delta = GaugeDelta('unique', 5)
-        self.assertEquals(gauge_delta.name, 'unique')
-        self.assertEquals(gauge_delta.delta, 5)
+        self.assertEqual(gauge_delta.name, 'unique')
+        self.assertEqual(gauge_delta.delta, 5)
 
     def test_delta_should_be_numeric(self):
         self.assertRaises(AssertionError, GaugeDelta, 'string_val', '')

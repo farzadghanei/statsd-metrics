@@ -12,6 +12,7 @@ from __future__ import print_function
 import os
 
 try:
+    import setuptools
     from setuptools import setup
 except ImportError:
     setuptools = None
