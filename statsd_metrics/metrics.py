@@ -32,8 +32,10 @@ class AbstractMetric(object):
 
     @name.setter
     def name(self, name):
-        assert type(name) in StringTypes, 'Metric name should be string'
-        assert name != '', 'Metric name should not be empty'
+        assert type(name) in StringTypes,\
+            'Metric name should be string'
+        assert name != '',\
+            'Metric name should not be empty'
         self._name = name
 
     @property
@@ -42,14 +44,17 @@ class AbstractMetric(object):
 
     @sample_rate.setter
     def sample_rate(self, value):
-        assert type(value) in (FloatType, IntType) , 'Metric sample rate should be numeric'
-        assert value > 0, 'Metric sample rate should be positive'
+        assert type(value) in (FloatType, IntType),\
+            'Metric sample rate should be numeric'
+        assert value > 0,\
+            'Metric sample rate should be positive'
         self._sample_rate = value
 
 
 class Counter(AbstractMetric):
     def __init__(self, name, count=0, sample_rate=1):
         super(Counter, self).__init__(name)
+        self._count = 0
         self.count = count
         self.sample_rate = sample_rate
 
@@ -59,7 +64,8 @@ class Counter(AbstractMetric):
 
     @count.setter
     def count(self, count):
-        assert type(count) is IntType, 'Counter count should be integer'
+        assert type(count) is IntType,\
+            'Counter count should be integer'
         self._count = count
 
     def to_request(self):
@@ -72,6 +78,7 @@ class Counter(AbstractMetric):
 class Timer(AbstractMetric):
     def __init__(self, name, milliseconds, sample_rate=1):
         super(Timer, self).__init__(name)
+        self._milliseconds = 0
         self.milliseconds = milliseconds
         self.sample_rate = sample_rate
 
@@ -81,8 +88,10 @@ class Timer(AbstractMetric):
 
     @milliseconds.setter
     def milliseconds(self, milliseconds):
-        assert type(milliseconds) is FloatType, 'Timer milliseconds should be float'
-        assert milliseconds >= 0, 'Timer milliseconds should not be negative'
+        assert type(milliseconds) in (FloatType, IntType),\
+            'Timer milliseconds should be numeric'
+        assert milliseconds >= 0,\
+            'Timer milliseconds should not be negative'
         self._milliseconds = milliseconds
 
     def to_request(self):
@@ -105,8 +114,10 @@ class Gauge(AbstractMetric):
 
     @value.setter
     def value(self, value):
-        assert type(value) in (FloatType, IntType), 'Gauge value should be numeric'
-        assert value >= 0, 'Gauge value should not be negative'
+        assert type(value) in (FloatType, IntType),\
+            'Gauge value should be numeric'
+        assert value >= 0,\
+            'Gauge value should not be negative'
         self._value = value
 
     def to_request(self):
