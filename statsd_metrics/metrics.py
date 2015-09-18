@@ -40,10 +40,38 @@ def normalize_metric_name(name):
     return name
 
 
+def parse_metric_from_request(request):
+    assert is_string(request), "Request should be string to parse a metric from"
+    metric_types = dict(
+            c=Counter,
+            ms=Timer,
+            )
+    metric_value_types = dict(
+            c=int,
+            ms=float
+    )
+
+    name, data = request.split(':')
+    value, type_section = data.split('|')
+    type_, _, sample_rate_section = type_section.partition('@')
+
+    if type_ not in metric_types:
+        raise ValueError(
+                "Invalid request. Metric type '{}' is not supported".format(type_))
+
+    value = metric_value_types[type_](value) if type_ in metric_value_types else value
+    sample_rate = AbstractMetric.default_sample_rate if sample_rate_section == '' \
+            else float(sample_rate_section)
+
+    return metric_types[type_](name.strip(), value, sample_rate)
+
+
 class AbstractMetric(object):
+    default_sample_rate = 1
+
     def __init__(self, name):
         self._name = ''
-        self._sample_rate = 1
+        self._sample_rate = self.__class__.default_sample_rate
         self.name = name
 
     @property
@@ -65,9 +93,9 @@ class AbstractMetric(object):
     @sample_rate.setter
     def sample_rate(self, value):
         assert is_numeric(value),\
-            'Metric sample rate should be numeric'
+                'Metric sample rate should be numeric: {}:{}'.format(self.name, value)
         assert value > 0,\
-            'Metric sample rate should be positive'
+                'Metric sample rate should be positive: {}:{}'.format(self.name, value)
         self._sample_rate = value
 
 
@@ -94,6 +122,16 @@ class Counter(AbstractMetric):
             result += "|@{:n}".format(self._sample_rate)
         return result
 
+    def __eq__(self, other):
+        return self.name == other.name \
+               and self.count == other.count \
+               and self.sample_rate == other.sample_rate
+
+    def __ne__(self, other):
+        return self.name != other.name \
+                or self.count != other.count \
+                or self.sample_rate != other.sample_rate
+
 
 class Timer(AbstractMetric):
     def __init__(self, name, milliseconds, sample_rate=1):
@@ -119,6 +157,16 @@ class Timer(AbstractMetric):
         if self._sample_rate != 1:
             result += "|@{:n}".format(self._sample_rate)
         return result
+
+    def __eq__(self, other):
+        return self.name == other.name \
+               and self.milliseconds == other.milliseconds \
+               and self.sample_rate == other.sample_rate
+
+    def __ne__(self, other):
+        return self.name != other.name \
+                or self.milliseconds != other.milliseconds \
+                or self.sample_rate != other.sample_rate
 
 
 class Gauge(AbstractMetric):
@@ -201,4 +249,6 @@ class GaugeDelta(AbstractMetric):
 
 __all__ = (Counter, Timer, Gauge,
            Set, GaugeDelta,
-           normalize_metric_name)
+           normalize_metric_name,
+           parse_metric_from_request
+           )
