@@ -45,10 +45,12 @@ def parse_metric_from_request(request):
     metric_types = dict(
             c=Counter,
             ms=Timer,
+            g=Gauge
             )
     metric_value_types = dict(
             c=int,
-            ms=float
+            ms=float,
+            g=float
     )
 
     name, data = request.split(':')
@@ -123,11 +125,13 @@ class Counter(AbstractMetric):
         return result
 
     def __eq__(self, other):
+        assert isinstance(other, Counter), 'Counter can be compared to Counter only'
         return self.name == other.name \
                and self.count == other.count \
                and self.sample_rate == other.sample_rate
 
     def __ne__(self, other):
+        assert isinstance(other, Counter), 'Counter can be compared to Counter only'
         return self.name != other.name \
                 or self.count != other.count \
                 or self.sample_rate != other.sample_rate
@@ -159,11 +163,13 @@ class Timer(AbstractMetric):
         return result
 
     def __eq__(self, other):
+        assert isinstance(other, Timer), 'Timer can be compared to Timer only'
         return self.name == other.name \
                and self.milliseconds == other.milliseconds \
                and self.sample_rate == other.sample_rate
 
     def __ne__(self, other):
+        assert isinstance(other, Timer), 'Timer can be compared to Timer only'
         return self.name != other.name \
                 or self.milliseconds != other.milliseconds \
                 or self.sample_rate != other.sample_rate
@@ -193,6 +199,18 @@ class Gauge(AbstractMetric):
         if self._sample_rate != 1:
             result += "|@{:n}".format(self._sample_rate)
         return result
+
+    def __eq__(self, other):
+        assert isinstance(other, Gauge), 'Gauge can be compared to Gauge only'
+        return self.name == other.name \
+               and self.value == other.value \
+               and self.sample_rate == other.sample_rate
+
+    def __ne__(self, other):
+        assert isinstance(other, Gauge), 'Gauge can be compared to Gauge only'
+        return self.name != other.name \
+                or self.value != other.value \
+                or self.sample_rate != other.sample_rate
 
 
 class Set(AbstractMetric):

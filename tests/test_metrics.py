@@ -91,11 +91,30 @@ class TestMetrics(unittest.TestCase):
         )
 
     def test_parse_timer_metric_from_invalid_request_raises_value_error(self):
-        self.assertRaises(ValueError, parse_metric_from_request, "")
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|ms")
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|ms|@0.5")
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|ms_")
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:4.2|ms@_")
+
+    def test_parse_gauge_metric_from_request(self):
+        self.assertEqual(
+            Gauge("cpu_usage", 45.3),
+            parse_metric_from_request("cpu_usage:45.3|g")
+        )
+        self.assertEqual(
+            Gauge("mem usage?", 10240, 1),
+            parse_metric_from_request("mem usage?:10240|g|@1")
+        )
+        self.assertEqual(
+            Gauge("weird.gauge.with.rate", 23.3, 0.5),
+            parse_metric_from_request("weird.gauge.with.rate:23.3|g|@0.5")
+        )
+
+    def test_parse_gauge_metric_from_invalid_request_raises_value_error(self):
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|g")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|g|@0.5")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|g_")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:2.8|g@_")
 
 
 
