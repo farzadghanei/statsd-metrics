@@ -7,14 +7,13 @@ Data metrics for Statsd.
 See LICENSE file for more information.
 """
 
-__version__ = '0.0.1'
-
 from .metrics import (Counter, Timer, Gauge,
                       Set, GaugeDelta,
                       normalize_metric_name,
                       parse_metric_from_request,
                     )
 
+__version__ = '0.0.1'
 
 __all__ = (Counter, Timer, Gauge,
            Set, GaugeDelta,

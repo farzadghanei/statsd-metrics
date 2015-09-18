@@ -18,14 +18,15 @@ except NameError:
 
 
 def is_string(value):
-    return isinstance(value, str) or\
+    return isinstance(value, str) or \
            isinstance(value, unicode)
 
 
 def is_numeric(value):
-    return isinstance(value, int) or\
-           isinstance(value, float) or\
+    return isinstance(value, int) or \
+           isinstance(value, float) or \
            isinstance(value, long)
+
 
 normalize_metric_name_regex_subs = (
     (compile("\s+"), "_"),
@@ -41,17 +42,18 @@ def normalize_metric_name(name):
 
 
 def parse_metric_from_request(request):
-    assert is_string(request), "Request should be string to parse a metric from"
+    assert is_string(request), \
+        "Request should be string to parse a metric from"
     metric_types = dict(
-            c=Counter,
-            ms=Timer,
-            g=Gauge,
-            s=Set,
-            )
+        c=Counter,
+        ms=Timer,
+        g=Gauge,
+        s=Set,
+    )
     metric_value_types = dict(
-            c=int,
-            ms=float,
-            g=float,
+        c=int,
+        ms=float,
+        g=float,
     )
 
     name, data = request.split(':')
@@ -60,11 +62,12 @@ def parse_metric_from_request(request):
 
     if type_ not in metric_types:
         raise ValueError(
-                "Invalid request. Metric type '{}' is not supported".format(type_))
+            "Invalid request. Metric type '{}' is not supported".format(type_))
 
-    value = metric_value_types[type_](value) if type_ in metric_value_types else value
-    sample_rate = AbstractMetric.default_sample_rate if sample_rate_section == '' \
-            else float(sample_rate_section)
+    value = metric_value_types[type_](value) \
+        if type_ in metric_value_types else value
+    sample_rate = AbstractMetric.default_sample_rate \
+        if sample_rate_section == '' else float(sample_rate_section)
 
     return metric_types[type_](name.strip(), value, sample_rate)
 
@@ -83,9 +86,9 @@ class AbstractMetric(object):
 
     @name.setter
     def name(self, name):
-        assert is_string(name),\
+        assert is_string(name), \
             'Metric name should be string'
-        assert name != '',\
+        assert name != '', \
             'Metric name should not be empty'
         self._name = name
 
@@ -95,10 +98,12 @@ class AbstractMetric(object):
 
     @sample_rate.setter
     def sample_rate(self, value):
-        assert is_numeric(value),\
-                'Metric sample rate should be numeric: {}:{}'.format(self.name, value)
-        assert value > 0,\
-                'Metric sample rate should be positive: {}:{}'.format(self.name, value)
+        assert is_numeric(value), \
+            'Metric sample rate should be numeric: {}:{}'.format(
+                self.name, value)
+        assert value > 0, \
+            'Metric sample rate should be positive: {}:{}'.format(
+                self.name, value)
         self._sample_rate = value
 
 
@@ -115,7 +120,7 @@ class Counter(AbstractMetric):
 
     @count.setter
     def count(self, count):
-        assert isinstance(count, int),\
+        assert isinstance(count, int), \
             'Counter count should be integer'
         self._count = count
 
@@ -126,16 +131,18 @@ class Counter(AbstractMetric):
         return result
 
     def __eq__(self, other):
-        assert isinstance(other, Counter), 'Counter can be compared to Counter only'
+        assert isinstance(other, Counter), \
+            'Counter can be compared to Counter only'
         return self.name == other.name \
                and self.count == other.count \
                and self.sample_rate == other.sample_rate
 
     def __ne__(self, other):
-        assert isinstance(other, Counter), 'Counter can be compared to Counter only'
+        assert isinstance(other, Counter), \
+            'Counter can be compared to Counter only'
         return self.name != other.name \
-                or self.count != other.count \
-                or self.sample_rate != other.sample_rate
+               or self.count != other.count \
+               or self.sample_rate != other.sample_rate
 
 
 class Timer(AbstractMetric):
@@ -151,9 +158,9 @@ class Timer(AbstractMetric):
 
     @milliseconds.setter
     def milliseconds(self, milliseconds):
-        assert is_numeric(milliseconds),\
+        assert is_numeric(milliseconds), \
             'Timer milliseconds should be numeric'
-        assert milliseconds >= 0,\
+        assert milliseconds >= 0, \
             'Timer milliseconds should not be negative'
         self._milliseconds = milliseconds
 
@@ -164,16 +171,18 @@ class Timer(AbstractMetric):
         return result
 
     def __eq__(self, other):
-        assert isinstance(other, Timer), 'Timer can be compared to Timer only'
+        assert isinstance(other, Timer), \
+            'Timer can be compared to Timer only'
         return self.name == other.name \
                and self.milliseconds == other.milliseconds \
                and self.sample_rate == other.sample_rate
 
     def __ne__(self, other):
-        assert isinstance(other, Timer), 'Timer can be compared to Timer only'
+        assert isinstance(other, Timer), \
+            'Timer can be compared to Timer only'
         return self.name != other.name \
-                or self.milliseconds != other.milliseconds \
-                or self.sample_rate != other.sample_rate
+               or self.milliseconds != other.milliseconds \
+               or self.sample_rate != other.sample_rate
 
 
 class Gauge(AbstractMetric):
@@ -189,9 +198,9 @@ class Gauge(AbstractMetric):
 
     @value.setter
     def value(self, value):
-        assert is_numeric(value),\
+        assert is_numeric(value), \
             'Gauge value should be numeric'
-        assert value >= 0,\
+        assert value >= 0, \
             'Gauge value should not be negative'
         self._value = value
 
@@ -202,16 +211,18 @@ class Gauge(AbstractMetric):
         return result
 
     def __eq__(self, other):
-        assert isinstance(other, Gauge), 'Gauge can be compared to Gauge only'
+        assert isinstance(other, Gauge), \
+            'Gauge can be compared to Gauge only'
         return self.name == other.name \
                and self.value == other.value \
                and self.sample_rate == other.sample_rate
 
     def __ne__(self, other):
-        assert isinstance(other, Gauge), 'Gauge can be compared to Gauge only'
+        assert isinstance(other, Gauge), \
+            'Gauge can be compared to Gauge only'
         return self.name != other.name \
-                or self.value != other.value \
-                or self.sample_rate != other.sample_rate
+               or self.value != other.value \
+               or self.sample_rate != other.sample_rate
 
 
 class Set(AbstractMetric):
@@ -230,31 +241,34 @@ class Set(AbstractMetric):
         try:
             str(value)
         except (TypeError, ValueError):
-            raise AssertionError("Set value should be convertible to string")
+            raise AssertionError(
+                "Set value should be convertible to string")
         try:
             hash(value)
         except (TypeError, ValueError):
-            raise AssertionError("Set value should be hashable")
+            raise AssertionError(
+                "Set value should be hashable")
         self._value = value
 
     def to_request(self):
         result = "{0}:{1}|s".format(self._name, self._value)
         if self._sample_rate != 1:
-                result += "|@{:n}".format(self._sample_rate)
+            result += "|@{:n}".format(self._sample_rate)
         return result
 
     def __eq__(self, other):
-        assert isinstance(other, Set), 'Set can be compared to Set only'
+        assert isinstance(other, Set), \
+            "Set can be compared to Set only"
         return self.name == other.name \
                and self.value == other.value \
                and self.sample_rate == other.sample_rate
 
     def __ne__(self, other):
-        assert isinstance(other, Set), 'Set can be compared to Set only'
+        assert isinstance(other, Set), \
+            "Set can be compared to Set only"
         return self.name != other.name \
-                or self.value != other.value \
-                or self.sample_rate != other.sample_rate
-
+               or self.value != other.value \
+               or self.sample_rate != other.sample_rate
 
 
 class GaugeDelta(AbstractMetric):
@@ -270,15 +284,16 @@ class GaugeDelta(AbstractMetric):
 
     @delta.setter
     def delta(self, delta):
-        assert is_numeric(delta),\
-            'Gauge delta should be numeric'
+        assert is_numeric(delta), \
+            "Gauge delta should be numeric"
         self._delta = delta
 
     def to_request(self):
         result = "{}:{:+n}|g".format(self._name, self._delta)
         if self._sample_rate != 1:
-                result += "|@{:n}".format(self._sample_rate)
+            result += "|@{:n}".format(self._sample_rate)
         return result
+
 
 __all__ = (Counter, Timer, Gauge,
            Set, GaugeDelta,
