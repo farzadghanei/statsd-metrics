@@ -116,6 +116,19 @@ class TestMetrics(unittest.TestCase):
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|g_")
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:2.8|g@_")
 
+    def test_parse_set_metric_from_request(self):
+        self.assertEqual(
+            Set("host", '127.0.0.1'),
+            parse_metric_from_request("host:127.0.0.1|s")
+        )
+        self.assertEqual(
+            Set("user id?", '12345', 1),
+            parse_metric_from_request("user id?:12345|s|@1")
+        )
+        self.assertEqual(
+            Set("weird.set.with.rate", '25.7', 0.5),
+            parse_metric_from_request("weird.set.with.rate:25.7|s|@0.5")
+        )
 
 
 class TestCounter(unittest.TestCase):

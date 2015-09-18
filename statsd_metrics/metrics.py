@@ -45,12 +45,13 @@ def parse_metric_from_request(request):
     metric_types = dict(
             c=Counter,
             ms=Timer,
-            g=Gauge
+            g=Gauge,
+            s=Set,
             )
     metric_value_types = dict(
             c=int,
             ms=float,
-            g=float
+            g=float,
     )
 
     name, data = request.split(':')
@@ -214,10 +215,11 @@ class Gauge(AbstractMetric):
 
 
 class Set(AbstractMetric):
-    def __init__(self, name, value):
+    def __init__(self, name, value, sample_rate=1):
         self._value = 0
         super(Set, self).__init__(name)
         self.value = value
+        self.sample_rate = sample_rate
 
     @property
     def value(self):
@@ -240,6 +242,19 @@ class Set(AbstractMetric):
         if self._sample_rate != 1:
                 result += "|@{:n}".format(self._sample_rate)
         return result
+
+    def __eq__(self, other):
+        assert isinstance(other, Set), 'Set can be compared to Set only'
+        return self.name == other.name \
+               and self.value == other.value \
+               and self.sample_rate == other.sample_rate
+
+    def __ne__(self, other):
+        assert isinstance(other, Set), 'Set can be compared to Set only'
+        return self.name != other.name \
+                or self.value != other.value \
+                or self.sample_rate != other.sample_rate
+
 
 
 class GaugeDelta(AbstractMetric):
