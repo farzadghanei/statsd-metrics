@@ -4,9 +4,21 @@ Data metrics for Statsd.
 
 Provides classes to define data types for Statsd metrics.
 
+Requirements
+------------
+The project has no specific requirements. It should run on Python 2.7+.
+
+However on development enviromnet having `distutilazy <https://pypi.python.org/pypi/distutilazy>`_ (or setuptools) is suggested (to be able to run tests).
+
+.. code-block:: bash
+
+    # on dev/test env
+    pip install -r requirements-dev.txt
+
 
 Tests
 -----
+
 If you have make available
 
 .. code-block:: bash
