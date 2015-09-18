@@ -134,6 +134,25 @@ class TestMetrics(unittest.TestCase):
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|s_")
         self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:name|s@_")
 
+    def test_parse_gauge_delta_metric_from_request(self):
+        self.assertEqual(
+            GaugeDelta("cpu_usage", 6),
+            parse_metric_from_request("cpu_usage:+6|g")
+        )
+        self.assertEqual(
+            GaugeDelta("mem usage?", -2048, 1),
+            parse_metric_from_request("mem usage?:-2048|g|@1")
+        )
+        self.assertEqual(
+            GaugeDelta("weird.gauge.delta.with.rate", 23.3, 0.5),
+            parse_metric_from_request("weird.gauge.delta.with.rate:+23.3|g|@0.5")
+        )
+
+    def test_parse_gauge_delta_metric_from_invalid_request_raises_value_error(self):
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:+hello|g")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:-hello|g|@0.5")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:+4|g_")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:-2.8|g@_")
 
 class TestCounter(unittest.TestCase):
     def test_counter_constructor(self):

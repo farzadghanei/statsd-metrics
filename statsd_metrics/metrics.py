@@ -44,7 +44,7 @@ def normalize_metric_name(name):
 def parse_metric_from_request(request):
     assert is_string(request), \
         "Request should be string to parse a metric from"
-    metric_types = dict(
+    metric_type_classes = dict(
         c=Counter,
         ms=Timer,
         g=Gauge,
@@ -60,16 +60,22 @@ def parse_metric_from_request(request):
     value, _, type_section = data.partition('|')
     type_, _, sample_rate_section = type_section.partition('|@')
 
-    if type_ not in metric_types:
+    if type_ not in metric_type_classes:
         raise ValueError(
             "Invalid request. Metric type '{}' is not supported".format(type_))
 
+    if type_ == 'g' and len(value) > 1 and value[0] in ('+', '-'):
+        metric_class = GaugeDelta
+    else:
+        metric_class = metric_type_classes[type_]
+
     value = metric_value_types[type_](value) \
         if type_ in metric_value_types else value
+
     sample_rate = AbstractMetric.default_sample_rate \
         if sample_rate_section == '' else float(sample_rate_section)
 
-    return metric_types[type_](name.strip(), value, sample_rate)
+    return metric_class(name.strip(), value, sample_rate)
 
 
 class AbstractMetric(object):
@@ -293,6 +299,20 @@ class GaugeDelta(AbstractMetric):
         if self._sample_rate != 1:
             result += "|@{:n}".format(self._sample_rate)
         return result
+
+    def __eq__(self, other):
+        assert isinstance(other, GaugeDelta), \
+            'GaugeDelta can be compared to GaugeDelta only'
+        return self.name == other.name \
+               and self.delta == other.delta \
+               and self.sample_rate == other.sample_rate
+
+    def __ne__(self, other):
+        assert isinstance(other, GaugeDelta), \
+            'GaugeDelta can be compared to GaugeDelta only'
+        return self.name != other.name \
+               or self.delta != other.delta \
+               or self.sample_rate != other.sample_rate
 
 
 __all__ = (Counter, Timer, Gauge,
