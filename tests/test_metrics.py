@@ -49,29 +49,28 @@ class TestMetrics(unittest.TestCase):
         )
         self.assertEqual(
             Counter("with rate?", 0, 1),
-            parse_metric_from_request("with rate?:0|c@1")
+            parse_metric_from_request("with rate?:0|c|@1")
         )
         self.assertEqual(
             Counter("accounts.active.disable", 4567, 1.0),
-            parse_metric_from_request("accounts.active.disable:4567|c@1.0")
+            parse_metric_from_request("accounts.active.disable:4567|c|@1.0")
         )
         self.assertEqual(
             Counter("float_rate", 345, 0.2),
-            parse_metric_from_request("float_rate:345|c@0.2")
+            parse_metric_from_request("float_rate:345|c|@0.2")
         )
 
     def test_parse_counter_metric_from_invalid_request_raises_value_error(self):
         self.assertRaises(ValueError, parse_metric_from_request, "")
-        self.assertRaises(ValueError, parse_metric_from_request, "badrequest")
-        self.assertRaises(ValueError, parse_metric_from_request, "bad request")
-        self.assertRaises(ValueError, parse_metric_from_request, "bad reqeuest:value")
-        self.assertRaises(ValueError, parse_metric_from_request, "bad reqeuest:2")
-        self.assertRaises(ValueError, parse_metric_from_request, "bad reqeuest:2|something")
-        self.assertRaises(ValueError, parse_metric_from_request, "pipe|2|c")
-        self.assertRaises(ValueError, parse_metric_from_request, "name:2|X")
-        self.assertRaises(ValueError, parse_metric_from_request, "name:2|c_")
-        self.assertRaises(ValueError, parse_metric_from_request, "name:2|c@hello")
-        self.assertRaises(ValueError, parse_metric_from_request, "name:2.2|c@1")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_request")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid request")
+        self.assertRaises(ValueError, parse_metric_from_request, "bad_value_separator|2|c")
+        self.assertRaises(ValueError, parse_metric_from_request, "missing_value:")
+        self.assertRaises(ValueError, parse_metric_from_request, "no type:2")
+        self.assertRaises(ValueError, parse_metric_from_request, "missing_type:2|")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:2|X")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:2|c@hello")
+        self.assertRaises(ValueError, parse_metric_from_request, "float_counter:2.2|c@1")
 
     def test_parse_timer_metric_from_request(self):
         self.assertEqual(
@@ -84,19 +83,19 @@ class TestMetrics(unittest.TestCase):
         )
         self.assertEqual(
             Timer("db.query.with.rate", 10, 1),
-            parse_metric_from_request("db.query.with.rate:10|ms@1")
+            parse_metric_from_request("db.query.with.rate:10|ms|@1")
         )
         self.assertEqual(
             Timer("db_query_float_rate", 23.5, 0.5),
-            parse_metric_from_request("db_query_float_rate:23.5|ms@0.5")
+            parse_metric_from_request("db_query_float_rate:23.5|ms|@0.5")
         )
 
     def test_parse_timer_metric_from_invalid_request_raises_value_error(self):
         self.assertRaises(ValueError, parse_metric_from_request, "")
-        self.assertRaises(ValueError, parse_metric_from_request, "timer:hello|ms")
-        self.assertRaises(ValueError, parse_metric_from_request, "timer:4|ms_")
-        self.assertRaises(ValueError, parse_metric_from_request, "timer:4.2|ms@_")
-        self.assertRaises(ValueError, parse_metric_from_request, "timer:1|ms@what")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|ms")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|ms|@0.5")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|ms_")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:4.2|ms@_")
 
 
 

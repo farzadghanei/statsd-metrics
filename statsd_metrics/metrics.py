@@ -52,8 +52,8 @@ def parse_metric_from_request(request):
     )
 
     name, data = request.split(':')
-    value, type_section = data.split('|')
-    type_, _, sample_rate_section = type_section.partition('@')
+    value, _, type_section = data.partition('|')
+    type_, _, sample_rate_section = type_section.partition('|@')
 
     if type_ not in metric_types:
         raise ValueError(
