@@ -130,6 +130,10 @@ class TestMetrics(unittest.TestCase):
             parse_metric_from_request("weird.set.with.rate:25.7|s|@0.5")
         )
 
+    def test_parse_set_metric_from_invalid_request_raises_value_error(self):
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|s_")
+        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:name|s@_")
+
 
 class TestCounter(unittest.TestCase):
     def test_counter_constructor(self):
