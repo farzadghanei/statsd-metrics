@@ -27,7 +27,7 @@ def is_numeric(value):
            isinstance(value, float) or\
            isinstance(value, long)
 
-normalize_metric_name_regexes = (
+normalize_metric_name_regex_subs = (
     (compile("\s+"), "_"),
     (compile("[\/\\\\]"), "-"),
     (compile("[^\w.-]"), ""),
@@ -35,7 +35,7 @@ normalize_metric_name_regexes = (
 
 
 def normalize_metric_name(name):
-    for regex, replacement in normalize_metric_name_regexes:
+    for regex, replacement in normalize_metric_name_regex_subs:
         name = sub(regex, replacement, name)
     return name
 
