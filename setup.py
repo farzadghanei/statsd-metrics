@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-statsd_metrics
+statsdmetrics
 --------------
 
 Data metrics for Statsd.
@@ -24,7 +24,7 @@ try:
 except ImportError:
     distutilazy = None
 
-from statsd_metrics import __version__
+from statsdmetrics import __version__
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -46,10 +46,10 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as fh:
     long_description = fh.read()
 
 setup_params = dict(
-    name = 'statsd_metrics',
-    packages = ['statsd_metrics'],
+    name = 'statsdmetrics',
+    packages = ['statsdmetrics'],
     version = __version__,
-    description = 'Data metrics for Statsd',
+    description = 'Metric classes for Statsd',
     long_description = long_description,
     author = 'Farzad Ghanei',
     author_email = 'farzad.ghanei@gmail.com',

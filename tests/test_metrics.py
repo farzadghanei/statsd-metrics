@@ -5,11 +5,11 @@ unit tests for module functions metric classes.
 """
 
 import unittest
-from statsd_metrics import (Counter, Timer,
-                            Gauge, Set, GaugeDelta,
-                            normalize_metric_name,
-                            parse_metric_from_request
-                            )
+from statsdmetrics import (Counter, Timer,
+                           Gauge, Set, GaugeDelta,
+                           normalize_metric_name,
+                           parse_metric_from_request
+                           )
 
 
 class TestMetrics(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestMetrics(unittest.TestCase):
             normalize_metric_name("metric/name\\with/slashes")
         )
 
-    def test_normalize_metric_names_removes_none_alphanumeric_underscore_or_dashes(self):
+    def test_normalize_names_removes_none_alphanumeric_dashes(self):
         self.assertEqual(
             "namewithinvalidcharsandall",
             normalize_metric_name("#+name?with~invalid!chars(and)all*&")
@@ -40,7 +40,6 @@ class TestMetrics(unittest.TestCase):
     def test_parse_metric_from_request_requires_string(self):
         self.assertRaises(AssertionError, parse_metric_from_request, 10)
         self.assertRaises(AssertionError, parse_metric_from_request, 2.2)
-
 
     def test_parse_counter_metric_from_request(self):
         self.assertEqual(
@@ -60,17 +59,41 @@ class TestMetrics(unittest.TestCase):
             parse_metric_from_request("float_rate:345|c|@0.2")
         )
 
-    def test_parse_counter_metric_from_invalid_request_raises_value_error(self):
+    def test_parse_counter_metric_from_invalid_request_raises_error(self):
         self.assertRaises(ValueError, parse_metric_from_request, "")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_request")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid request")
-        self.assertRaises(ValueError, parse_metric_from_request, "bad_value_separator|2|c")
-        self.assertRaises(ValueError, parse_metric_from_request, "missing_value:")
-        self.assertRaises(ValueError, parse_metric_from_request, "no type:2")
-        self.assertRaises(ValueError, parse_metric_from_request, "missing_type:2|")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:2|X")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:2|c@hello")
-        self.assertRaises(ValueError, parse_metric_from_request, "float_counter:2.2|c@1")
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "invalid_request"
+        )
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "invalid request"
+        )
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "bad_value_separator|2|c"
+        )
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "missing_value:"
+        )
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "no type:2"
+        )
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "missing_type:2|")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_type:2|X")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_rate:2|c@hello")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "float_counter:2.2|c@1")
 
     def test_parse_timer_metric_from_request(self):
         self.assertEqual(
@@ -91,10 +114,17 @@ class TestMetrics(unittest.TestCase):
         )
 
     def test_parse_timer_metric_from_invalid_request_raises_value_error(self):
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|ms")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|ms|@0.5")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|ms_")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:4.2|ms@_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_value:hello|ms")
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "invalid_value:hello|ms|@0.5"
+        )
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_type:4|ms_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_rate:4.2|ms@_")
 
     def test_parse_gauge_metric_from_request(self):
         self.assertEqual(
@@ -111,10 +141,17 @@ class TestMetrics(unittest.TestCase):
         )
 
     def test_parse_gauge_metric_from_invalid_request_raises_value_error(self):
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|g")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:hello|g|@0.5")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|g_")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:2.8|g@_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_value:hello|g")
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "invalid_value:hello|g|@0.5"
+        )
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_type:4|g_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_rate:2.8|g@_")
 
     def test_parse_set_metric_from_request(self):
         self.assertEqual(
@@ -131,8 +168,10 @@ class TestMetrics(unittest.TestCase):
         )
 
     def test_parse_set_metric_from_invalid_request_raises_value_error(self):
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:4|s_")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:name|s@_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_type:4|s_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_rate:name|s@_")
 
     def test_parse_gauge_delta_metric_from_request(self):
         self.assertEqual(
@@ -145,14 +184,23 @@ class TestMetrics(unittest.TestCase):
         )
         self.assertEqual(
             GaugeDelta("weird.gauge.delta.with.rate", 23.3, 0.5),
-            parse_metric_from_request("weird.gauge.delta.with.rate:+23.3|g|@0.5")
+            parse_metric_from_request(
+                "weird.gauge.delta.with.rate:+23.3|g|@0.5")
         )
 
-    def test_parse_gauge_delta_metric_from_invalid_request_raises_value_error(self):
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:+hello|g")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_value:-hello|g|@0.5")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_type:+4|g_")
-        self.assertRaises(ValueError, parse_metric_from_request, "invalid_rate:-2.8|g@_")
+    def test_parse_gauge_delta_metric_from_invalid_request_raises_error(self):
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_value:+hello|g")
+        self.assertRaises(
+            ValueError,
+            parse_metric_from_request,
+            "invalid_value:-hello|g|@0.5"
+        )
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_type:+4|g_")
+        self.assertRaises(
+            ValueError, parse_metric_from_request, "invalid_rate:-2.8|g@_")
+
 
 class TestCounter(unittest.TestCase):
     def test_counter_constructor(self):
@@ -188,7 +236,8 @@ class TestCounter(unittest.TestCase):
         self.assertEqual(counter.count, 2)
 
     def test_sample_rate_should_be_numeric(self):
-        self.assertRaises(AssertionError, Counter, 'string_sample_rate', 1, 'what?')
+        self.assertRaises(
+            AssertionError, Counter, 'string_sample_rate', 1, 'what?')
         counter = Counter('ok')
         counter.sample_rate = 0.4
         self.assertEqual(counter.sample_rate, 0.4)
@@ -238,7 +287,8 @@ class TestTimer(unittest.TestCase):
         self.assertEqual(timer.milliseconds, 0.0)
 
     def test_sample_rate_should_be_numeric(self):
-        self.assertRaises(AssertionError, Timer, 'string_sample_rate', 1.0, 's')
+        self.assertRaises(
+            AssertionError, Timer, 'string_sample_rate', 1.0, 's')
         timer = Timer('ok', 0.1)
         timer.sample_rate = 0.3
         self.assertEqual(timer.sample_rate, 0.3)
@@ -298,7 +348,8 @@ class TestGauge(unittest.TestCase):
         self.assertRaises(AssertionError, set_negative_value)
 
     def test_sample_rate_should_be_numeric(self):
-        self.assertRaises(AssertionError, Gauge, 'string_sample_rate', 1.0, 's')
+        self.assertRaises(
+            AssertionError, Gauge, 'string_sample_rate', 1.0, 's')
         gauge = Gauge('ok', 4)
         gauge.sample_rate = 0.3
         self.assertEqual(gauge.sample_rate, 0.3)
@@ -362,6 +413,7 @@ class TestGaugeDelta(unittest.TestCase):
 
         gauge_delta3 = GaugeDelta('again', 15, 0.4)
         self.assertEqual(gauge_delta3.to_request(), 'again:+15|g|@0.4')
+
 
 if __name__ == '__main__':
     unittest.main()

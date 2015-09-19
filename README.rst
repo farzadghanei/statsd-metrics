@@ -1,26 +1,22 @@
 Statsd Metrics
-===============
+==============
 
 .. image:: https://travis-ci.org/farzadghanei/statsd-metrics.svg?branch=master
     :target: https://travis-ci.org/farzadghanei/statsd-metrics
 
-Data metrics for Statsd.
+Metric classes for Statsd and and functionality to create or parse
+Statsd requests.
 
-Provides classes to define data types for Statsd metrics and functionality to create or read Statsd requests.
-
-Available metric classes:
-
+Available metrics:
  - Counter
  - Timer
  - Gauge
  - Set
  - GaugeDelta
 
-Example:
-
 .. code-block:: python
 
-    from statsd_metrics import Counter, Timer
+    from statsdmetrics import Counter, Timer
 
     counter = Counter('event.login', 1, 0.2)
     counter.to_request() # returns event.login:1|c|@0.2
@@ -28,25 +24,23 @@ Example:
     timer = Timer('db.search.username', 27.4)
     timer.to_request() # returns db.search.username:27.4|ms
 
-Also a function is provided to parse metrics from a Statsd request
+Parse metrics from a Statsd request
 
 .. code-block:: python
 
-    from statsd_metrics import parse_metric_from_request
+    from statsdmetrics import parse_metric_from_request
 
     event_login = parse_metric_from_request('event.login:1|c|@.2')
-    # event_login is a Counter object.
-    # event_login.count is 1
-    # event_login.sample_rate is 0.2
+    # event_login is a Counter object with count = 1 and sample_rate = 0.2
 
     mem_usage = parse_metric_from_request('resource.memory:2048|g')
-    # mem_usage is a Gauge object. mem_usage.value is 2028
+    # mem_usage is a Gauge object with value = 2028
 
-Requirements
+Dependencies
 ------------
-The project has no specific requirements. It should run on Python 2.7+.
-
-However on development environment having `distutilazy <https://pypi.python.org/pypi/distutilazy>`_
+There are no specific dependencies, it runs on Python 2.7+,
+however on development environment having
+`distutilazy <https://pypi.python.org/pypi/distutilazy>`_
 (or setuptools) is suggested (to be able to run tests).
 
 .. code-block:: bash
@@ -72,4 +66,5 @@ You can always use the setup.py file
 
 License
 -------
-Statsd metrics is released under the terms of the `MIT license <http://opensource.org/licenses/MIT>`_.
+Statsd metrics is released under the terms of the
+`MIT license <http://opensource.org/licenses/MIT>`_.

@@ -1,5 +1,5 @@
 """
 tests
 -----
-statsd_metrics unit tests
+statsdmetrics unit tests
 """
