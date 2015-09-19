@@ -1,7 +1,7 @@
 """
 statsdmetrics
 --------------
-Data metrics for Statsd.
+Metric classes for Statsd.
 
 :license: released under the terms of the MIT license.
 See LICENSE file for more information.
