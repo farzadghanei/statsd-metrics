@@ -20,7 +20,7 @@ Example:
 
 .. code-block:: python
 
-    from statsd_metrics import Counter, Timer
+    from statsdmetrics import Counter, Timer
 
     counter = Counter('event.login', 1, 0.2)
     counter.to_request() # returns event.login:1|c|@0.2
@@ -32,7 +32,7 @@ Also a function is provided to parse metrics from a Statsd request
 
 .. code-block:: python
 
-    from statsd_metrics import parse_metric_from_request
+    from statsdmetrics import parse_metric_from_request
 
     event_login = parse_metric_from_request('event.login:1|c|@.2')
     # event_login is a Counter object.

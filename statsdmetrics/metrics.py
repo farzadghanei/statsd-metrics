@@ -1,5 +1,5 @@
 """
-statsd_metrics.metrics
+statsdmetrics.metrics
 ----------------------
 Define metric classes
 """

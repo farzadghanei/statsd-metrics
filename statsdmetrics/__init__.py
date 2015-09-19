@@ -1,5 +1,5 @@
 """
-statsd_metrics
+statsdmetrics
 --------------
 Data metrics for Statsd.
 

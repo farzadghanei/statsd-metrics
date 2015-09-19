@@ -5,7 +5,7 @@ unit tests for module functions metric classes.
 """
 
 import unittest
-from statsd_metrics import (Counter, Timer,
+from statsdmetrics import (Counter, Timer,
                             Gauge, Set, GaugeDelta,
                             normalize_metric_name,
                             parse_metric_from_request
