@@ -62,7 +62,8 @@ def parse_metric_from_request(request):
 
     if type_ not in metric_type_classes:
         raise ValueError(
-            "Invalid request. Metric type '{}' is not supported".format(type_))
+            "Invalid request. Metric type '{}' is not supported".format(type_)
+        )
 
     if type_ == 'g' and len(value) > 1 and value[0] in ('+', '-'):
         metric_class = GaugeDelta
