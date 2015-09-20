@@ -5,7 +5,10 @@ Statsd client to send metrics to server
 """
 
 import socket
-from .metrics import Counter
+from random import random
+
+from .metrics import Counter, normalize_metric_name
+
 
 DEFAULT_PORT = 8125
 
@@ -47,11 +50,33 @@ class Client(object):
         return self._remote_addr
 
     def increment(self, name, count=1, rate=1):
-        self._send(Counter(name, count, rate).to_request())
+        if self._should_send_metric(name, rate):
+            self._send(
+                Counter(
+                    self._get_metric_name(name),
+                    int(count),
+                    rate
+                ).to_request()
+            )
+
+    def decrement(self, name, count=1, rate=1):
+        if self._should_send_metric(name, rate):
+            self._send(
+                Counter(
+                    self._get_metric_name(name),
+                    -1 * int(count),
+                    rate
+                ).to_request()
+            )
+
+    def _get_metric_name(self, name):
+        return self.prefix + normalize_metric_name(name)
+
+    def _should_send_metric(self, name, rate):
+        return rate >= 1 or random() <= rate
 
     def _send(self, data):
         self.socket.sendto(str(data).encode(), self.remote_addr)
 
     def __del__(self):
-        if self.socket:
-            self.socket.close()
+        self.socket.close()

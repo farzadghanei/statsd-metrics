@@ -65,19 +65,85 @@ class TestClient(unittest.TestCase):
         client.port = port2
         self.assertEqual(client.remote_addr, ("127.0.0.2", port2))
 
+    @mock.patch('statsdmetrics.client.random')
     @mock.patch('statsdmetrics.client.socket.socket')
     @mock.patch('statsdmetrics.client.socket.gethostbyname')
-    def test_increment_sends_metrics(self, mock_gethost, mock_socket):
+    def test_increment_sends_metrics(self, mock_gethost, mock_socket,
+                                     mock_random):
         mock_gethost.return_value = "127.0.0.2"
-        client = Client("localhost")
-        client.socket = mock_socket
         mock_sendto = mock.MagicMock()
         mock_socket.sendto = mock_sendto
+        mock_random.return_value = 0.3
+
+        client = Client("localhost")
+        client.socket = mock_socket
         client.increment("event")
         mock_sendto.assert_called_with(
             "event:1|c".encode(),
             ("127.0.0.2", 8125)
         )
+        client.increment("event2", 5)
+        mock_sendto.assert_called_with(
+            "event2:5|c".encode(),
+            ("127.0.0.2", 8125)
+        )
+        client.increment("region.event name", 2, 0.5)
+        mock_sendto.assert_called_with(
+            "region.event_name:2|c|@0.5".encode(),
+            ("127.0.0.2", 8125)
+        )
+
+        client.port = 8000
+        client.prefix = "region.c_"
+        client.increment("login", rate=0.6)
+        mock_sendto.assert_called_with(
+            "region.c_login:1|c|@0.6".encode(),
+            ("127.0.0.2", 8000)
+        )
+
+        mock_sendto.reset_mock()
+        client.increment("low.rate", rate=0.1)
+        self.assertEqual(mock_sendto.call_count, 0)
+
+    @mock.patch('statsdmetrics.client.random')
+    @mock.patch('statsdmetrics.client.socket.socket')
+    @mock.patch('statsdmetrics.client.socket.gethostbyname')
+    def test_decrement_sends_metrics(self, mock_gethost, mock_socket,
+                                     mock_random):
+        mock_gethost.return_value = "10.10.10.1"
+        mock_sendto = mock.MagicMock()
+        mock_socket.sendto = mock_sendto
+        mock_random.return_value = 0.3
+
+        client = Client("localhost")
+        client.socket = mock_socket
+        client.decrement("event")
+        mock_sendto.assert_called_with(
+            "event:-1|c".encode(),
+            ("10.10.10.1", 8125)
+        )
+        client.decrement("event2", 5)
+        mock_sendto.assert_called_with(
+            "event2:-5|c".encode(),
+            ("10.10.10.1", 8125)
+        )
+        client.decrement("region.event name", 2, 0.5)
+        mock_sendto.assert_called_with(
+            "region.event_name:-2|c|@0.5".encode(),
+            ("10.10.10.1", 8125)
+        )
+
+        client.prefix = "region.c_"
+        client.port = 8000
+        client.decrement("active", rate=0.7)
+        mock_sendto.assert_called_with(
+            "region.c_active:-1|c|@0.7".encode(),
+            ("10.10.10.1", 8000)
+        )
+
+        mock_sendto.reset_mock()
+        client.decrement("low.rate", rate=0.1)
+        self.assertEqual(mock_sendto.call_count, 0)
 
 
 if __name__ == "__main__":
