@@ -1,6 +1,6 @@
 """
-statsdmetrics.app.statsd_client
--------------------------------
+statsdmetrics.app.statsdclient
+------------------------------
 Statsd client utility app
 """
 from __future__ import print_function
@@ -16,7 +16,7 @@ from statsdmetrics import __version__
 from statsdmetrics.client import Client, DEFAULT_PORT
 
 
-class StatsdClientApp(object):
+class StatsdClient(object):
     version = __version__
 
     @classmethod
@@ -134,7 +134,7 @@ Options:
 
 
 def main():
-    short_opts, long_opts = StatsdClientApp.get_cli_options()
+    short_opts, long_opts = StatsdClient.get_cli_options()
     try:
         opts, args = getopt(
                         sys.argv[1:],
@@ -147,7 +147,7 @@ def main():
             file=sys.stderr
         )
         sys.exit(getattr(os, "EX_CONFIG", 78))
-    app = StatsdClientApp(opts, args)
+    app = StatsdClient(opts, args)
     try:
         sys.exit(app.run())
     except KeyboardInterrupt as e:

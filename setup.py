@@ -47,7 +47,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as fh:
 
 setup_params = dict(
     name = 'statsdmetrics',
-    packages = ['statsdmetrics'],
+    packages = ['statsdmetrics', 'statsdmetrics.app'],
     version = __version__,
     description = 'Metric classes for Statsd',
     long_description = long_description,
@@ -57,20 +57,21 @@ setup_params = dict(
     classifiers = classifiers,
 )
 
+if setuptools:
+    setup_params['test_suite'] = 'tests'
+    setup_params['zip_safe'] = True
+    setup_params['entry_points'] = {
+        'console_scripts': [
+            'statsd-client = statsdmetrics.app.statsdclient:main',
+        ]
+    }
+
 if distutilazy:
     setup_params['cmdclass'] = dict(
         test=distutilazy.test.run_tests,
         clean_pyc=distutilazy.clean.clean_pyc,
         clean=distutilazy.clean.clean_all
     )
-elif setuptools:
-    setup_params['test_suite'] = 'tests'
-    setup_params['zip_safe'] = True
-    setup_params['entry_points'] = {
-        'console_scripts': [
-            'statsd-client = statsdmetrics.app.statsd_client:main',
-        ]
-    }
 
 if __name__ == '__main__':
     setup(**setup_params)
