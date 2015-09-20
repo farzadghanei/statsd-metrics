@@ -7,7 +7,7 @@ Statsd client to send metrics to server
 import socket
 from random import random
 
-from .metrics import (Counter, Timer, Gauge,
+from .metrics import (Counter, Timer, Gauge, GaugeDelta,
                       normalize_metric_name, is_numeric)
 
 
@@ -100,6 +100,18 @@ class Client(object):
                 Gauge(
                     self._get_metric_name(name),
                     value,
+                    rate
+                ).to_request()
+            )
+
+    def gauge_delta(self, name, delta, rate=1):
+        if self._should_send_metric(name, rate):
+            if not is_numeric(delta):
+                delta = float(delta)
+            self._send(
+                GaugeDelta(
+                    self._get_metric_name(name),
+                    delta,
                     rate
                 ).to_request()
             )
