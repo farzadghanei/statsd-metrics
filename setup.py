@@ -66,6 +66,11 @@ if distutilazy:
 elif setuptools:
     setup_params['test_suite'] = 'tests'
     setup_params['zip_safe'] = True
+    setup_params['entry_points'] = {
+        'console_scripts': [
+            'statsd-client = statsdmetrics.app.statsd_client:main',
+        ]
+    }
 
 if __name__ == '__main__':
     setup(**setup_params)
