@@ -7,13 +7,23 @@ Statsd client to send metrics to server
 import socket
 from random import random
 
-from .metrics import Counter, normalize_metric_name
+from .metrics import (Counter, Timer, normalize_metric_name, is_numeric)
 
 
 DEFAULT_PORT = 8125
 
 
 class Client(object):
+    """Statsd Client
+
+    >>> client = Client("stats.example.org")
+    >>> client.increment("event")
+    >>> client.increment("event", 3, 0.4) # specify count and sample rate
+    >>> # able to change configurations
+    >>> client.port = 8126
+    >>> client.prefix = "region"
+    >>> client.decrement("event", rate=0.2)
+    """
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
         self._port = None
         self._host = None
@@ -65,6 +75,18 @@ class Client(object):
                 Counter(
                     self._get_metric_name(name),
                     -1 * int(count),
+                    rate
+                ).to_request()
+            )
+
+    def timing(self, name, milliseconds, rate=1):
+        if self._should_send_metric(name, rate):
+            if not is_numeric(milliseconds):
+                milliseconds = float(milliseconds)
+            self._send(
+                Timer(
+                    self._get_metric_name(name),
+                    milliseconds,
                     rate
                 ).to_request()
             )

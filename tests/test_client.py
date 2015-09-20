@@ -20,10 +20,10 @@ class TestClient(unittest.TestCase):
         self.assertEqual(default_client.port, DEFAULT_PORT)
         self.assertEqual(default_client.prefix, "")
 
-        client = Client("stats.example.org", 8111, "mystats")
+        client = Client("stats.example.org", 8111, "region")
         self.assertEqual(client.host, "stats.example.org")
         self.assertEqual(client.port, 8111)
-        self.assertEqual(client.prefix, "mystats")
+        self.assertEqual(client.prefix, "region")
         client.host = "stats.example.com"
         self.assertEqual(client.host, "stats.example.com")
         client.port = 8126
@@ -68,8 +68,7 @@ class TestClient(unittest.TestCase):
     @mock.patch('statsdmetrics.client.random')
     @mock.patch('statsdmetrics.client.socket.socket')
     @mock.patch('statsdmetrics.client.socket.gethostbyname')
-    def test_increment_sends_metrics(self, mock_gethost, mock_socket,
-                                     mock_random):
+    def test_increment(self, mock_gethost, mock_socket, mock_random):
         mock_gethost.return_value = "127.0.0.2"
         mock_sendto = mock.MagicMock()
         mock_socket.sendto = mock_sendto
@@ -95,7 +94,7 @@ class TestClient(unittest.TestCase):
 
         client.port = 8000
         client.prefix = "region.c_"
-        client.increment("login", rate=0.6)
+        client.increment("@login#", rate=0.6)
         mock_sendto.assert_called_with(
             "region.c_login:1|c|@0.6".encode(),
             ("127.0.0.2", 8000)
@@ -108,8 +107,7 @@ class TestClient(unittest.TestCase):
     @mock.patch('statsdmetrics.client.random')
     @mock.patch('statsdmetrics.client.socket.socket')
     @mock.patch('statsdmetrics.client.socket.gethostbyname')
-    def test_decrement_sends_metrics(self, mock_gethost, mock_socket,
-                                     mock_random):
+    def test_decrement(self, mock_gethost, mock_socket, mock_random):
         mock_gethost.return_value = "10.10.10.1"
         mock_sendto = mock.MagicMock()
         mock_socket.sendto = mock_sendto
@@ -135,14 +133,48 @@ class TestClient(unittest.TestCase):
 
         client.prefix = "region.c_"
         client.port = 8000
-        client.decrement("active", rate=0.7)
+        client.decrement("active!users", rate=0.7)
         mock_sendto.assert_called_with(
-            "region.c_active:-1|c|@0.7".encode(),
+            "region.c_activeusers:-1|c|@0.7".encode(),
             ("10.10.10.1", 8000)
         )
 
         mock_sendto.reset_mock()
         client.decrement("low.rate", rate=0.1)
+        self.assertEqual(mock_sendto.call_count, 0)
+
+    @mock.patch('statsdmetrics.client.random')
+    @mock.patch('statsdmetrics.client.socket.socket')
+    @mock.patch('statsdmetrics.client.socket.gethostbyname')
+    def test_timing(self, mock_gethost, mock_socket, mock_random):
+        mock_gethost.return_value = "10.10.10.1"
+        mock_sendto = mock.MagicMock()
+        mock_socket.sendto = mock_sendto
+        mock_random.return_value = 0.3
+
+        client = Client("localhost")
+        client.socket = mock_socket
+        client.timing("event", 10)
+        mock_sendto.assert_called_with(
+            "event:10|ms".encode(),
+            ("10.10.10.1", 8125)
+        )
+        client.timing("db.event name", 34.5, 0.5)
+        mock_sendto.assert_called_with(
+            "db.event_name:34.5|ms|@0.5".encode(),
+            ("10.10.10.1", 8125)
+        )
+
+        client.prefix = "region.c_"
+        client.port = 8000
+        client.timing("db/query", rate=0.7, milliseconds=22.22)
+        mock_sendto.assert_called_with(
+            "region.c_db-query:22.22|ms|@0.7".encode(),
+            ("10.10.10.1", 8000)
+        )
+
+        mock_sendto.reset_mock()
+        client.timing("low.rate", 12, rate=0.1)
         self.assertEqual(mock_sendto.call_count, 0)
 
 
