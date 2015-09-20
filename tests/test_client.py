@@ -177,6 +177,8 @@ class TestClient(unittest.TestCase):
         client.timing("low.rate", 12, rate=0.1)
         self.assertEqual(mock_sendto.call_count, 0)
 
+        self.assertRaises(AssertionError, client.timing, "negative", -0.5)
+
     @mock.patch('statsdmetrics.client.random')
     @mock.patch('statsdmetrics.client.socket.socket')
     @mock.patch('statsdmetrics.client.socket.gethostbyname')
@@ -205,6 +207,8 @@ class TestClient(unittest.TestCase):
         mock_sendto.reset_mock()
         client.gauge("low.rate", 128, 0.1)
         self.assertEqual(mock_sendto.call_count, 0)
+
+        self.assertRaises(AssertionError, client.gauge, "negative", -5)
 
 
 if __name__ == "__main__":
