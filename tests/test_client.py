@@ -177,6 +177,35 @@ class TestClient(unittest.TestCase):
         client.timing("low.rate", 12, rate=0.1)
         self.assertEqual(mock_sendto.call_count, 0)
 
+    @mock.patch('statsdmetrics.client.random')
+    @mock.patch('statsdmetrics.client.socket.socket')
+    @mock.patch('statsdmetrics.client.socket.gethostbyname')
+    def test_gauge(self, mock_gethost, mock_socket, mock_random):
+        mock_gethost.return_value = "10.10.10.1"
+        mock_sendto = mock.MagicMock()
+        mock_socket.sendto = mock_sendto
+        mock_random.return_value = 0.3
+
+        client = Client("localhost")
+        client.socket = mock_socket
+        client.gauge("memory", 10240)
+        mock_sendto.assert_called_with(
+            "memory:10240|g".encode(),
+            ("10.10.10.1", 8125)
+        )
+
+        client.prefix = "region."
+        client.port = 9000
+        client.gauge("cpu percentage%", rate=0.9, value=98.3)
+        mock_sendto.assert_called_with(
+            "region.cpu_percentage:98.3|g|@0.9".encode(),
+            ("10.10.10.1", 9000)
+        )
+
+        mock_sendto.reset_mock()
+        client.gauge("low.rate", 128, 0.1)
+        self.assertEqual(mock_sendto.call_count, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

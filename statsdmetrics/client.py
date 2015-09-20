@@ -7,7 +7,8 @@ Statsd client to send metrics to server
 import socket
 from random import random
 
-from .metrics import (Counter, Timer, normalize_metric_name, is_numeric)
+from .metrics import (Counter, Timer, Gauge,
+                      normalize_metric_name, is_numeric)
 
 
 DEFAULT_PORT = 8125
@@ -87,6 +88,18 @@ class Client(object):
                 Timer(
                     self._get_metric_name(name),
                     milliseconds,
+                    rate
+                ).to_request()
+            )
+
+    def gauge(self, name, value, rate=1):
+        if self._should_send_metric(name, rate):
+            if not is_numeric(value):
+                value = float(value)
+            self._send(
+                Gauge(
+                    self._get_metric_name(name),
+                    value,
                     rate
                 ).to_request()
             )
