@@ -227,6 +227,29 @@ class TestClient(unittest.TestCase):
         client.gauge_delta("low.rate", 10, 0.1)
         self.assertEqual(mock_sendto.call_count, 0)
 
+    def test_set(self):
+        mock_sendto = mock.MagicMock()
+        self.mock_socket.sendto = mock_sendto
+
+        client = Client("localhost")
+        client.socket = self.mock_socket
+        client.set("ip address", "10.10.10.1")
+        mock_sendto.assert_called_with(
+            "ip_address:10.10.10.1|s".encode(),
+            ("127.0.0.2", 8125)
+        )
+
+        client.prefix = "region."
+        client.port = 9000
+        client.set("~username*", rate=0.9, value='first')
+        mock_sendto.assert_called_with(
+            "region.username:first|s|@0.9".encode(),
+            ("127.0.0.2", 9000)
+        )
+
+        mock_sendto.reset_mock()
+        client.set("low.rate", 256, 0.1)
+        self.assertEqual(mock_sendto.call_count, 0)
 
 if __name__ == "__main__":
     unittest.main()
