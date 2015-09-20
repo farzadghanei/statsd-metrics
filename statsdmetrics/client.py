@@ -27,7 +27,7 @@ class Client(object):
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
         self._port = None
         self._host = None
-        self._remote_addr = None
+        self._remote_address = None
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.host = host
         self.port = port
@@ -42,7 +42,7 @@ class Client(object):
         port = int(port)
         assert 0 < port < 65536
         self._port = port
-        self._remote_addr = None
+        self._remote_address = None
 
     @property
     def host(self):
@@ -51,13 +51,13 @@ class Client(object):
     @host.setter
     def host(self, host):
         self._host = host
-        self._remote_addr = None
+        self._remote_address = None
 
     @property
-    def remote_addr(self):
-        if self._remote_addr is None:
-            self._remote_addr = (socket.gethostbyname(self.host), self.port)
-        return self._remote_addr
+    def remote_address(self):
+        if self._remote_address is None:
+            self._remote_address = (socket.gethostbyname(self.host), self.port)
+        return self._remote_address
 
     def increment(self, name, count=1, rate=1):
         if self._should_send_metric(name, rate):
@@ -98,7 +98,7 @@ class Client(object):
         return rate >= 1 or random() <= rate
 
     def _send(self, data):
-        self.socket.sendto(str(data).encode(), self.remote_addr)
+        self.socket.sendto(str(data).encode(), self.remote_address)
 
     def __del__(self):
         self.socket.close()

@@ -34,36 +34,36 @@ class TestClient(unittest.TestCase):
         self.assertRaises(AssertionError, Client, "host", 0)
         self.assertRaises(AssertionError, Client, "host", 65536)
 
-    def test_remote_addr_is_readonly(self):
+    def test_remote_address_is_readonly(self):
         client = Client("localhost")
         with self.assertRaises(AttributeError) as context:
-            client.remote_addr = ("10.10.10.1", 8125)
+            client.remote_address = ("10.10.10.1", 8125)
 
     @mock.patch('statsdmetrics.client.socket.gethostbyname')
-    def test_remote_addr_updates_when_host_is_updated(self, mock_gethost):
+    def test_remote_address_updates_when_host_is_updated(self, mock_gethost):
         host1 = "localhost"
         host2 = "example.org"
         client = Client(host1)
         mock_gethost.return_value = "127.0.0.2"
-        addr1 = client.remote_addr
+        address1 = client.remote_address
         mock_gethost.assert_called_with(host1)
-        self.assertEqual(addr1, ("127.0.0.2", 8125))
+        self.assertEqual(address1, ("127.0.0.2", 8125))
 
         client.host = host2
         mock_gethost.return_value = "10.10.10.1"
-        addr2 = client.remote_addr
+        address2 = client.remote_address
         mock_gethost.assert_called_with(host2)
-        self.assertEqual(addr2, ("10.10.10.1", 8125))
+        self.assertEqual(address2, ("10.10.10.1", 8125))
 
     @mock.patch('statsdmetrics.client.socket.gethostbyname')
-    def test_remote_addr_updates_when_port_is_updated(self, mock_gethost):
+    def test_remote_address_updates_when_port_is_updated(self, mock_gethost):
         port1 = 8125
         port2 = 1024
         client = Client("localhost", port1)
         mock_gethost.return_value = "127.0.0.2"
-        self.assertEqual(client.remote_addr, ("127.0.0.2", port1))
+        self.assertEqual(client.remote_address, ("127.0.0.2", port1))
         client.port = port2
-        self.assertEqual(client.remote_addr, ("127.0.0.2", port2))
+        self.assertEqual(client.remote_address, ("127.0.0.2", port2))
 
     @mock.patch('statsdmetrics.client.random')
     @mock.patch('statsdmetrics.client.socket.socket')
