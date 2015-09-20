@@ -10,6 +10,7 @@ Data metrics for Statsd.
 from __future__ import print_function
 
 import os
+from os.path import dirname
 
 try:
     import setuptools
@@ -34,6 +35,10 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.2",
+    "Programming Language :: Python :: 3.3",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -46,34 +51,44 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as fh:
     long_description = fh.read()
 
 setup_params = dict(
-    name = 'statsdmetrics',
-    packages = ['statsdmetrics', 'statsdmetrics.app'],
+    name = "statsdmetrics",
+    packages = ["statsdmetrics", "statsdmetrics.app"],
     version = __version__,
-    description = 'Metric classes for Statsd',
+    description = "Metric classes for Statsd",
     long_description = long_description,
-    author = 'Farzad Ghanei',
-    author_email = 'farzad.ghanei@gmail.com',
-    license = 'MIT',
+    author = "Farzad Ghanei",
+    author_email = "farzad.ghanei@gmail.com",
+    license = "MIT",
     classifiers = classifiers,
 )
 
 if setuptools:
-    setup_params['test_suite'] = 'tests'
-    setup_params['zip_safe'] = True
-    setup_params['entry_points'] = {
-        'console_scripts': [
-            'statsd-client = statsdmetrics.app.statsdclient:main',
+    dev_dependencies_filename = os.path.join(
+        dirname(__file__),
+        "requirements-dev.txt"
+    )
+    if os.path.exists(dev_dependencies_filename):
+        with open(dev_dependencies_filename) as fh:
+            setup_params["extras_require"] = {
+                "dev": [item.strip() for item in fh.readlines()]
+            }
+    setup_params["keywords"] = "statsd metrics"
+    setup_params["test_suite"] = "tests"
+    setup_params["zip_safe"] = True
+    setup_params["entry_points"] = {
+        "console_scripts": [
+            "statsd-client = statsdmetrics.app.statsdclient:main",
         ]
     }
 
 if distutilazy:
-    setup_params['cmdclass'] = dict(
+    setup_params["cmdclass"] = dict(
         test=distutilazy.test.run_tests,
         clean_pyc=distutilazy.clean.clean_pyc,
         clean=distutilazy.clean.clean_all
     )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setup(**setup_params)
 
 __all__ = (setup_params, classifiers, long_description)
