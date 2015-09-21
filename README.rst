@@ -4,15 +4,18 @@ Statsd Metrics
 .. image:: https://travis-ci.org/farzadghanei/statsd-metrics.svg?branch=master
     :target: https://travis-ci.org/farzadghanei/statsd-metrics
 
-Metric classes for Statsd and and functionality to create or parse
+Metric classes for Statsd and and functionality to create, parse and send
 Statsd requests.
 
+Metric Classes
+--------------
 Available metrics:
- - Counter
- - Timer
- - Gauge
- - Set
- - GaugeDelta
+
+- Counter
+- Timer
+- Gauge
+- Set
+- GaugeDelta
 
 .. code-block:: python
 
@@ -36,12 +39,37 @@ Parse metrics from a Statsd request
     mem_usage = parse_metric_from_request('resource.memory:2048|g')
     # mem_usage is a Gauge object with value = 2028
 
+Statsd Client
+-------------
+Send Statsd requests
+
+.. code-block:: python
+
+    from statsdmetrics.client import Client
+
+    client = Client("stats.example.org", prefix="region")
+
+    client.increment("login")
+    client.timing("db.search.username", 3500)
+    client.set("unique.ip_address", "10.10.10.1")
+    client.gauge("memory", 20480)
+    client.gauge_delta("memory", -256)
+
+    # change settings
+    client.host = "localhost"
+    client.port = 8126
+
+    client.decrement(name="connections", 2, rate=0.9)
+
 Dependencies
 ------------
-There are no specific dependencies, it runs on Python 2.7+,
-however on development environment having
+There are no specific dependencies, it runs on Python 2.7+ (CPython 3.2, 3.3
+3.4 and 3.5, PyPy and PyPy3 are tested)
+
+however on development (and test) environment
+`mock <https://pypi.python.org/pypi/mock>`__ is required, and
 `distutilazy <https://pypi.python.org/pypi/distutilazy>`_
-(or setuptools) is suggested (to be able to run tests).
+(or setuptools as a fallback) is used to run the tests.
 
 .. code-block:: bash
 
