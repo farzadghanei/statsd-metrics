@@ -10,10 +10,11 @@ try:
 except ImportError:
     import mock
 
-from statsdmetrics.client import Client, DEFAULT_PORT
+from statsdmetrics.client import Client, BatchClient, DEFAULT_PORT
 
 
-class TestClient(unittest.TestCase):
+class BaseTestCase(unittest.TestCase):
+    """MixIn class to patch socket module for tests"""
 
     def setUp(self):
         patcher = mock.patch('statsdmetrics.client.socket.gethostbyname')
@@ -29,6 +30,9 @@ class TestClient(unittest.TestCase):
         patcher = mock.patch('statsdmetrics.client.socket.socket')
         self.mock_socket = patcher.start()
         self.addCleanup(patcher.stop)
+
+
+class TestClient(BaseTestCase):
 
     def test_init_and_properties(self):
         default_client = Client("127.0.0.1")
@@ -77,13 +81,12 @@ class TestClient(unittest.TestCase):
         client.port = port2
         self.assertEqual(client.remote_address, ("127.0.0.2", port2))
 
-    @mock.patch('statsdmetrics.client.socket.socket')
-    def test_increment(self, mock_socket):
+    def test_increment(self):
         mock_sendto = mock.MagicMock()
-        mock_socket.sendto = mock_sendto
+        self.mock_socket.sendto = mock_sendto
 
         client = Client("localhost")
-        client.socket = mock_socket
+        client._socket = self.mock_socket
         client.increment("event")
         mock_sendto.assert_called_with(
             "event:1|c".encode(),
@@ -117,7 +120,7 @@ class TestClient(unittest.TestCase):
         self.mock_socket.sendto = mock_sendto
 
         client = Client("localhost")
-        client.socket = self.mock_socket
+        client._socket = self.mock_socket
         client.decrement("event")
         mock_sendto.assert_called_with(
             "event:-1|c".encode(),
@@ -151,7 +154,7 @@ class TestClient(unittest.TestCase):
         self.mock_socket.sendto = mock_sendto
 
         client = Client("localhost")
-        client.socket = self.mock_socket
+        client._socket = self.mock_socket
         client.timing("event", 10)
         mock_sendto.assert_called_with(
             "event:10|ms".encode(),
@@ -182,7 +185,7 @@ class TestClient(unittest.TestCase):
         self.mock_socket.sendto = mock_sendto
 
         client = Client("localhost")
-        client.socket = self.mock_socket
+        client._socket = self.mock_socket
         client.gauge("memory", 10240)
         mock_sendto.assert_called_with(
             "memory:10240|g".encode(),
@@ -208,7 +211,7 @@ class TestClient(unittest.TestCase):
         self.mock_socket.sendto = mock_sendto
 
         client = Client("localhost")
-        client.socket = self.mock_socket
+        client._socket = self.mock_socket
         client.gauge_delta("memory!", 128)
         mock_sendto.assert_called_with(
             "memory:+128|g".encode(),
@@ -232,7 +235,7 @@ class TestClient(unittest.TestCase):
         self.mock_socket.sendto = mock_sendto
 
         client = Client("localhost")
-        client.socket = self.mock_socket
+        client._socket = self.mock_socket
         client.set("ip address", "10.10.10.1")
         mock_sendto.assert_called_with(
             "ip_address:10.10.10.1|s".encode(),
@@ -250,6 +253,67 @@ class TestClient(unittest.TestCase):
         mock_sendto.reset_mock()
         client.set("low.rate", 256, 0.1)
         self.assertEqual(mock_sendto.call_count, 0)
+
+    def test_context_manager_creates_batch_client(self):
+        client = Client("localhost")
+        client._socket = self.mock_socket
+
+        with client.batch_client() as batch_client:
+            self.assertIsInstance(batch_client, BatchClient)
+            self.assertGreater(batch_client.batch_size, 0)
+            self.assertEqual(batch_client.size, 0)
+            self.assertEqual(client.host, batch_client.host)
+            self.assertEqual(client.port, batch_client.port)
+            self.assertEqual(
+                client._remote_address,
+                batch_client._remote_address
+            )
+            self.assertEqual(
+                client._socket,
+                batch_client._socket
+            )
+
+        with client.batch_client(2048) as batch_client:
+            self.assertEqual(batch_client.batch_size, 2048)
+
+
+class TestBatchClient(BaseTestCase):
+
+    def test_init_and_properties(self):
+        default_client = BatchClient("127.0.0.1")
+        self.assertEqual(default_client.host, "127.0.0.1")
+        self.assertEqual(default_client.port, DEFAULT_PORT)
+        self.assertEqual(default_client.prefix, "")
+        self.assertEqual(default_client.size, 0)
+        self.assertGreater(default_client.batch_size, 0)
+
+        client = BatchClient("stats.example.org", 8111, "region", 1024)
+        self.assertEqual(client.host, "stats.example.org")
+        self.assertEqual(client.port, 8111)
+        self.assertEqual(client.prefix, "region")
+        self.assertEqual(client.batch_size, 1024)
+        self.assertEqual(client.size, 0)
+
+        client.host = "stats.example.com"
+        self.assertEqual(client.host, "stats.example.com")
+        client.port = 8126
+        self.assertEqual(client.port, 8126)
+
+    def test_batch_size_should_be_int(self):
+        self.assertRaises(
+            ValueError, BatchClient, "localhost", batch_size="not number")
+        self.assertRaises(
+            AssertionError, BatchClient, "localhost", batch_size=-1)
+
+    def test_batch_size_and_size_are_read_only(self):
+        client = BatchClient("localhost")
+
+        with self.assertRaises(AttributeError) as context:
+            client.size = 100
+
+        with self.assertRaises(AttributeError) as context:
+            client.batch_size = 512
+
 
 if __name__ == "__main__":
     unittest.main()

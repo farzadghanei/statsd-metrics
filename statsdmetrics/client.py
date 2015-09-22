@@ -15,7 +15,7 @@ DEFAULT_PORT = 8125
 
 
 class Client(object):
-    """Statsd Client
+    """Statsd client
 
     >>> client = Client("stats.example.org")
     >>> client.increment("event")
@@ -25,11 +25,12 @@ class Client(object):
     >>> client.prefix = "region"
     >>> client.decrement("event", rate=0.2)
     """
+
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
         self._port = None
         self._host = None
         self._remote_address = None
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._socket = None
         self.host = host
         self.port = port
         self.prefix = prefix
@@ -127,14 +128,69 @@ class Client(object):
                 ).to_request()
             )
 
+    def batch_client(self, size=512):
+        batch_client = BatchClient(self.host, self.port, self.prefix, size)
+        batch_client._remote_address = self._remote_address
+        batch_client._socket = self._socket
+        return batch_client
+
     def _get_metric_name(self, name):
         return self.prefix + normalize_metric_name(name)
 
     def _should_send_metric(self, name, rate):
         return rate >= 1 or random() <= rate
 
+    def _get_socket(self):
+        if self._socket is None:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return self._socket
+
     def _send(self, data):
-        self.socket.sendto(str(data).encode(), self.remote_address)
+        self._get_socket().sendto(str(data).encode(), self.remote_address)
 
     def __del__(self):
-        self.socket.close()
+        if self._socket:
+            self._socket.close()
+
+
+class BatchClient(Client):
+    """Statsd client buffering requests and send in batch requests
+
+    >>> client = BatchClient("stats.example.org")
+    >>> client.increment("event")
+    >>> client.decrement("event.second", 3, 0.5)
+    >>> client.flush()
+    """
+
+    def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
+        super(BatchClient, self).__init__(host, port, prefix)
+        batch_size = int(batch_size)
+        assert batch_size > 0, "BatchClient batch size can not be negative"
+        self._batch_size = 0
+        self._size = 0
+        self._buffer = []
+        self._batch_size = batch_size
+
+    @property
+    def batch_size(self):
+        return self._batch_size
+
+    @property
+    def size(self):
+        return self._size
+
+    def clear(self):
+        self._size = 0
+        self._buffer = []
+
+    def flush(self):
+        """Send buffered metrics in batch requests"""
+        self.clear()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.flush()
+
+__all__ = (Client, BatchClient)
