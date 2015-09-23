@@ -131,7 +131,6 @@ class Client(object):
     def batch_client(self, size=512):
         batch_client = BatchClient(self.host, self.port, self.prefix, size)
         batch_client._remote_address = self._remote_address
-        batch_client._socket = self._socket
         return batch_client
 
     def _get_metric_name(self, name):

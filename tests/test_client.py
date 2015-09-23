@@ -268,10 +268,6 @@ class TestClient(BaseTestCase):
                 client._remote_address,
                 batch_client._remote_address
             )
-            self.assertEqual(
-                client._socket,
-                batch_client._socket
-            )
 
         with client.batch_client(2048) as batch_client:
             self.assertEqual(batch_client.batch_size, 2048)
