@@ -261,7 +261,6 @@ class TestClient(BaseTestCase):
         with client.batch_client() as batch_client:
             self.assertIsInstance(batch_client, BatchClient)
             self.assertGreater(batch_client.batch_size, 0)
-            self.assertEqual(batch_client.size, 0)
             self.assertEqual(client.host, batch_client.host)
             self.assertEqual(client.port, batch_client.port)
             self.assertEqual(
@@ -280,7 +279,6 @@ class TestBatchClient(BaseTestCase):
         self.assertEqual(default_client.host, "127.0.0.1")
         self.assertEqual(default_client.port, DEFAULT_PORT)
         self.assertEqual(default_client.prefix, "")
-        self.assertEqual(default_client.size, 0)
         self.assertGreater(default_client.batch_size, 0)
 
         client = BatchClient("stats.example.org", 8111, "region", 1024)
@@ -288,7 +286,6 @@ class TestBatchClient(BaseTestCase):
         self.assertEqual(client.port, 8111)
         self.assertEqual(client.prefix, "region")
         self.assertEqual(client.batch_size, 1024)
-        self.assertEqual(client.size, 0)
 
         client.host = "stats.example.com"
         self.assertEqual(client.host, "stats.example.com")
@@ -301,13 +298,9 @@ class TestBatchClient(BaseTestCase):
         self.assertRaises(
             AssertionError, BatchClient, "localhost", batch_size=-1)
 
-    def test_batch_size_and_size_are_read_only(self):
+    def test_batch_size_is_read_only(self):
         client = BatchClient("localhost")
-
-        with self.assertRaises(AttributeError) as context:
-            client.size = 100
-
-        with self.assertRaises(AttributeError) as context:
+        with self.assertRaises(AttributeError):
             client.batch_size = 512
 
 
