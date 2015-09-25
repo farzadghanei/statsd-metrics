@@ -182,10 +182,10 @@ class BatchClient(Client):
         batch_size = self._batch_size
         data_size = data_size or batch_size
         if data_size > batch_size:
-            self._batches.append(bytearray(data_size))
+            self._batches.append(bytearray())
         elif not self._batches or\
                         (len(self._batches[-1]) + data_size) >= batch_size:
-            self._batches.append(bytearray(batch_size))
+            self._batches.append(bytearray())
 
     def clear(self):
         self._batches = []
@@ -203,5 +203,6 @@ class BatchClient(Client):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.flush()
+
 
 __all__ = (Client, BatchClient)
