@@ -313,6 +313,53 @@ class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
         with self.assertRaises(AttributeError):
             client.batch_size = 512
 
+    def test_increment(self):
+        mock_sendto = mock.MagicMock()
+        self.mock_socket.sendto = mock_sendto
+
+        client = BatchClient("localhost")
+        client._socket = self.mock_socket
+        client.increment("event", 2, 0.5)
+        client.flush()
+        mock_sendto.assert_called_with(
+            bytearray("event:2|c|@0.5\n".encode()),
+            ("127.0.0.2", 8125)
+        )
+        mock_sendto.reset_mock()
+
+        client.increment("login")
+        client.increment("login.fail", 5, 0.2)
+        client.increment("login.ok", rate=0.8)
+        client.flush()
+
+        mock_sendto.assert_called_with(
+            bytearray("login:1|c\nlogin.ok:1|c|@0.8\n".encode()),
+            ("127.0.0.2", 8125)
+        )
+
+    def test_decrement(self):
+        mock_sendto = mock.MagicMock()
+        self.mock_socket.sendto = mock_sendto
+
+        client = BatchClient("localhost")
+        client._socket = self.mock_socket
+        client.decrement("event", 3, 0.7)
+        client.flush()
+        mock_sendto.assert_called_with(
+            bytearray("event:-3|c|@0.7\n".encode()),
+            ("127.0.0.2", 8125)
+        )
+        mock_sendto.reset_mock()
+
+        client.decrement("session")
+        client.decrement("session.fail", 2, 0.2)
+        client.decrement("session.ok", rate=0.6)
+        client.flush()
+
+        mock_sendto.assert_called_with(
+            bytearray("session:-1|c\nsession.ok:-1|c|@0.6\n".encode()),
+            ("127.0.0.2", 8125)
+        )
 
 if __name__ == "__main__":
     unittest.main()
