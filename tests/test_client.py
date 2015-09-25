@@ -308,28 +308,16 @@ class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
             ("127.0.0.2", 8125)
         )
         self.mock_sendto.reset_mock()
+        client.port = 8000
+        client.prefix = "pre."
         client.increment("login")
         client.increment("login.fail", 5, 0.2)
         client.increment("login.ok", rate=0.8)
         client.flush()
         self.mock_sendto.assert_called_once_with(
-            bytearray("login:1|c\nlogin.ok:1|c|@0.8\n".encode()),
-            ("127.0.0.2", 8125)
+            bytearray("pre.login:1|c\npre.login.ok:1|c|@0.8\n".encode()),
+            ("127.0.0.2", 8000)
         )
-
-    def test_increment_multi_batch(self):
-        client = BatchClient("localhost", batch_size=10)
-        client._socket = self.mock_socket
-        client.increment("12345")
-        client.increment("larger.than.batch.becomes.a.batch")
-        client.increment("123")
-        client.flush()
-        expected_calls = [
-                mock.call(bytearray("12345:1|c\n".encode()), ("127.0.0.2", 8125)),
-                mock.call(bytearray("larger.than.batch.becomes.a.batch:1|c\n".encode()), ("127.0.0.2", 8125)),
-                mock.call(bytearray("123:1|c\n".encode()), ("127.0.0.2", 8125)),
-        ]
-        self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
     def test_decrement(self):
         client = BatchClient("localhost")
@@ -341,30 +329,86 @@ class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
             ("127.0.0.2", 8125)
         )
         self.mock_sendto.reset_mock()
-
+        client.prefix = "pre."
+        client.port = 8000
         client.decrement("session")
         client.decrement("session.fail", 2, 0.2)
         client.decrement("session.ok", rate=0.6)
         client.flush()
 
         self.mock_sendto.assert_called_once_with(
-            bytearray("session:-1|c\nsession.ok:-1|c|@0.6\n".encode()),
-            ("127.0.0.2", 8125)
+            bytearray("pre.session:-1|c\npre.session.ok:-1|c|@0.6\n".encode()),
+            ("127.0.0.2", 8000)
         )
 
-    def test_decrement_multi_batch(self):
-        client = BatchClient("localhost", batch_size=10)
+    def test_timing(self):
+        client = BatchClient("localhost")
         client._socket = self.mock_socket
-        client.decrement("1234")
-        client.decrement("larger.than.batch.becomes.a.batch")
-        client.decrement("123")
+        client.timing("event", 10, 0.4)
+        client.flush()
+        self.mock_sendto.assert_called_with(
+            bytearray("event:10|ms|@0.4\n".encode()),
+            ("127.0.0.2", 8125)
+        )
+        self.mock_sendto.reset_mock()
+        client.prefix = "pre."
+        client.port = 8000
+        client.timing("query", 3)
+        client.timing("process.request", 2, 0.2)
+        client.timing("query.user", 350, rate=0.6)
+        client.flush()
+
+        self.mock_sendto.assert_called_once_with(
+            bytearray("pre.query:3|ms\npre.query.user:350|ms|@0.6\n".encode()),
+            ("127.0.0.2", 8000)
+        )
+
+    def test_gauge(self):
+        client = BatchClient("localhost")
+        client._socket = self.mock_socket
+        client.gauge("memory", 10240)
+        client.flush()
+        self.mock_sendto.assert_called_with(
+            bytearray("memory:10240|g\n".encode()),
+            ("127.0.0.2", 8125)
+        )
+        self.mock_sendto.reset_mock()
+        client.prefix = "pre."
+        client.port = 8000
+        client.gauge("memory", 2048)
+        client.gauge("memory", 8096, 0.2)
+        client.gauge("storage", 512, rate=0.6)
+        client.flush()
+
+        self.mock_sendto.assert_called_once_with(
+            bytearray("pre.memory:2048|g\npre.storage:512|g|@0.6\n".encode()),
+            ("127.0.0.2", 8000)
+        )
+
+    def test_metrics_partitioned_into_batches(self):
+        client = BatchClient("localhost", batch_size=20)
+        client._socket = self.mock_socket
+        client.increment("fit.a.batch.123")
+        client.timing("_", 1)
+        client.increment("larger.than.batch.becomes.a.batch", 5, 0.9)
+        client.decrement("12")
+        client.decrement("ab")
+        client.timing("small", 9)
+        client.gauge("overflow.previous", 10)
+        client.gauge("next", 10)
+        client.increment("_")
         client.flush()
         expected_calls = [
-                mock.call(bytearray("1234:-1|c\n".encode()), ("127.0.0.2", 8125)),
-                mock.call(bytearray("larger.than.batch.becomes.a.batch:-1|c\n".encode()), ("127.0.0.2", 8125)),
-                mock.call(bytearray("123:-1|c\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("fit.a.batch.123:1|c\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("_:1|ms\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("larger.than.batch.becomes.a.batch:5|c|@0.9\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("12:-1|c\nab:-1|c\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("small:9|ms\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("overflow.previous:10|g\n".encode()), ("127.0.0.2", 8125)),
+                mock.call(bytearray("next:10|g\n_:1|c\n".encode()), ("127.0.0.2", 8125)),
         ]
         self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
+
 
 if __name__ == "__main__":
     unittest.main()
