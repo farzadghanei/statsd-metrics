@@ -263,6 +263,21 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         with client.batch_client(2048) as batch_client:
             self.assertEqual(batch_client.batch_size, 2048)
 
+    def test_context_manager_flushs_metrics(self):
+        client = Client("localhost", prefix="_.")
+        client._socket = self.mock_socket
+
+        with client.batch_client() as batch_client:
+            batch_client._socket = self.mock_socket
+            batch_client.increment("event", rate=0.5)
+            batch_client.timing("query", 1200)
+            batch_client.decrement("event", rate=0.2)
+            self.assertEqual(self.mock_sendto.call_count, 0)
+
+        expected_calls = [
+                mock.call(bytearray("_.event:1|c|@0.5\n_.query:1200|ms\n".encode()), ("127.0.0.2", 8125)),
+        ]
+        self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
 class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
     def setUp(self):
