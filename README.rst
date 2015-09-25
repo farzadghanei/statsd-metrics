@@ -5,7 +5,7 @@ Statsd Metrics
     :target: https://travis-ci.org/farzadghanei/statsd-metrics
 
 Metric classes for Statsd and and functionality to create, parse and send
-Statsd requests.
+Statsd requests (each metric in a single request, or send batch requests).
 
 Metric Classes
 --------------
@@ -48,22 +48,49 @@ Send Statsd requests
     from statsdmetrics.client import Client
 
     client = Client("stats.example.org", prefix="region")
-
     client.increment("login")
     client.timing("db.search.username", 3500)
     client.set("unique.ip_address", "10.10.10.1")
     client.gauge("memory", 20480)
-    client.gauge_delta("memory", -256)
-
-    # change settings
+    # settings can be updated later
     client.host = "localhost"
     client.port = 8126
-
+    client.gauge_delta("memory", -256)
     client.decrement(name="connections", 2, rate=0.9)
+
+
+Sending multiple metrics in batch requests is supported through `BatchClient` class, either
+by using an available client as the context manager:
+
+
+.. code-block:: python
+
+    from statsdmetrics.client import Client
+
+    client = Client("stats.example.org", prefix="region")
+    with client.batch_client() as batch_client:
+        batch_client.increment("login")
+        batch_client.decrement(name="connections", 2, rate=0.9)
+        batch_client.timing("db.search.username", 3500)
+    # now all metrics are flushed automatically in batch requests
+
+
+or by creating a `BatchClient` object explicitly:
+
+
+.. code-block:: python
+
+    from statsdmetrics.client import BatchClient
+
+    client = BatchClient("stats.example.org", prefix="region")
+    client.set("unique.ip_address", "10.10.10.1")
+    client.gauge("memory", 20480)
+    client.flush() # sends one UDP packet to remote server, carrying both metrics
+
 
 Dependencies
 ------------
-There are no specific dependencies, it runs on Python 2.7+ (CPython 3.2, 3.3
+There are no specific dependencies, it runs on Python 2.7+ (CPython 2.7, 3.2, 3.3
 3.4 and 3.5, PyPy and PyPy3 are tested)
 
 however on development (and test) environment
