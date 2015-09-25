@@ -13,10 +13,10 @@ except ImportError:
 from statsdmetrics.client import Client, BatchClient, DEFAULT_PORT
 
 
-class BaseTestCase(unittest.TestCase):
-    """MixIn class to patch socket module for tests"""
+class MockMixIn():
+    """Base test case to patch socket module for tests"""
 
-    def setUp(self):
+    def doMock(self):
         patcher = mock.patch('statsdmetrics.client.socket.gethostbyname')
         self.mock_gethost = patcher.start()
         self.addCleanup(patcher.stop)
@@ -32,15 +32,19 @@ class BaseTestCase(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
 
-class TestClient(BaseTestCase):
+class ClientTestCaseMixIn(MockMixIn):
+
+    def setUp(self):
+        self.doMock()
+        self.clientClass = Client
 
     def test_init_and_properties(self):
-        default_client = Client("127.0.0.1")
+        default_client = self.clientClass("127.0.0.1")
         self.assertEqual(default_client.host, "127.0.0.1")
         self.assertEqual(default_client.port, DEFAULT_PORT)
         self.assertEqual(default_client.prefix, "")
 
-        client = Client("stats.example.org", 8111, "region")
+        client = self.clientClass("stats.example.org", 8111, "region")
         self.assertEqual(client.host, "stats.example.org")
         self.assertEqual(client.port, 8111)
         self.assertEqual(client.prefix, "region")
@@ -50,19 +54,19 @@ class TestClient(BaseTestCase):
         self.assertEqual(client.port, 8126)
 
     def test_port_number_should_be_valid(self):
-        self.assertRaises(AssertionError, Client, "host", -1)
-        self.assertRaises(AssertionError, Client, "host", 0)
-        self.assertRaises(AssertionError, Client, "host", 65536)
+        self.assertRaises(AssertionError, self.clientClass, "host", -1)
+        self.assertRaises(AssertionError, self.clientClass, "host", 0)
+        self.assertRaises(AssertionError, self.clientClass, "host", 65536)
 
     def test_remote_address_is_readonly(self):
-        client = Client("localhost")
-        with self.assertRaises(AttributeError) as context:
+        client = self.clientClass("localhost")
+        with self.assertRaises(AttributeError):
             client.remote_address = ("10.10.10.1", 8125)
 
     def test_remote_address_updates_when_host_is_updated(self):
         host1 = "localhost"
         host2 = "example.org"
-        client = Client(host1)
+        client = self.clientClass(host1)
         address1 = client.remote_address
         self.mock_gethost.assert_called_with(host1)
         self.assertEqual(address1, ("127.0.0.2", 8125))
@@ -76,10 +80,13 @@ class TestClient(BaseTestCase):
     def test_remote_address_updates_when_port_is_updated(self):
         port1 = 8125
         port2 = 1024
-        client = Client("localhost", port1)
+        client = self.clientClass("localhost", port1)
         self.assertEqual(client.remote_address, ("127.0.0.2", port1))
         client.port = port2
         self.assertEqual(client.remote_address, ("127.0.0.2", port2))
+
+
+class TestClient(ClientTestCaseMixIn, unittest.TestCase):
 
     def test_increment(self):
         mock_sendto = mock.MagicMock()
@@ -272,16 +279,19 @@ class TestClient(BaseTestCase):
             self.assertEqual(batch_client.batch_size, 2048)
 
 
-class TestBatchClient(BaseTestCase):
+class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
+    def setUp(self):
+        super(TestBatchClient, self).setUp()
+        self.clientClass = BatchClient
 
     def test_init_and_properties(self):
-        default_client = BatchClient("127.0.0.1")
+        default_client = self.clientClass("127.0.0.1")
         self.assertEqual(default_client.host, "127.0.0.1")
         self.assertEqual(default_client.port, DEFAULT_PORT)
         self.assertEqual(default_client.prefix, "")
         self.assertGreater(default_client.batch_size, 0)
 
-        client = BatchClient("stats.example.org", 8111, "region", 1024)
+        client = self.clientClass("stats.example.org", 8111, "region", 1024)
         self.assertEqual(client.host, "stats.example.org")
         self.assertEqual(client.port, 8111)
         self.assertEqual(client.prefix, "region")
