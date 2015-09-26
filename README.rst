@@ -67,7 +67,7 @@ by using an available client as the context manager:
 
     from statsdmetrics.client import Client
 
-    client = Client("stats.example.org", prefix="region")
+    client = Client("stats.example.org")
     with client.batch_client() as batch_client:
         batch_client.increment("login")
         batch_client.decrement(name="connections", 2)
