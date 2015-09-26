@@ -91,9 +91,9 @@ or by creating a `BatchClient` object explicitly:
 Dependencies
 ------------
 There are no specific dependencies, it runs on Python 2.7+ (CPython 2.7, 3.2, 3.3
-3.4 and 3.5, PyPy and PyPy3 are tested)
+3.4 and 3.5, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
 
-however on development (and test) environment
+However on development (and test) environment
 `mock <https://pypi.python.org/pypi/mock>`__ is required, and
 `distutilazy <https://pypi.python.org/pypi/distutilazy>`_
 (or setuptools as a fallback) is used to run the tests.
