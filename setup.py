@@ -59,6 +59,7 @@ setup_params = dict(
     long_description = long_description,
     author = "Farzad Ghanei",
     author_email = "farzad.ghanei@gmail.com",
+    url = "https://github.com/farzadghanei/statsd-metrics",
     license = "MIT",
     classifiers = classifiers,
 )
