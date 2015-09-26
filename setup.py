@@ -42,6 +42,7 @@ classifiers = [
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: Implementation :: Jython",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Networking :: Monitoring"
 ]
