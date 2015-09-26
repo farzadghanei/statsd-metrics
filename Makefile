@@ -1,3 +1,4 @@
+
 .PHONY: all build test clean
 .SILENT: test
 
@@ -15,11 +16,11 @@ clean:
 test:
 	python setup.py test
 
-sdist:
-	python setup.py sdist
+dist:
+	python setup.py bdist_wheel sdist
 
 build:
-	python setup.py bdist
+	python setup.py build
 
 install:
 	python setup.py install
