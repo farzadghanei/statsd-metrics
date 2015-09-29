@@ -468,6 +468,16 @@ class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
         ]
         self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
+    def test_clear(self):
+        client = BatchClient("localhost", batch_size=20)
+        client._socket = self.mock_socket
+        client.increment("first")
+        client.decrement("second")
+        client.timing("db.query", 1)
+        client.clear()
+        client.flush()
+        self.assertEqual(self.mock_sendto.call_count, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
