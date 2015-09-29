@@ -68,7 +68,7 @@ Metrics provide :meth:`~metrics.AbstractMetric.to_request` method to create the 
     'memory:-256|g'
 
 :mod:`metrics` -- Metric classes and helper functions
-===================================================================
+=====================================================
 
 .. module:: metrics
     :synopsis: Define metrics classes and helper functions

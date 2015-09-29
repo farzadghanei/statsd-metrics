@@ -1,8 +1,89 @@
-
+******
 Client
-======
+******
 
-The client module provides clients for Statsd server to send metrics.
+To send the metrics to Statsd server, client classes are available
+in the :mod:`client` module.
+
+
+:mod:`client` -- Statsd client
+==============================
+
+.. module:: client
+    :synopsis: Define Statsd client classes
+.. moduleauthor:: Farzad Ghanei
+
+.. class:: Client(host, [port=8125], [prefix=''])
+
+    Default Statsd client that sends each metric in a separate UDP request
+
+    .. data:: host
+
+        the host name (or IP address) of Statsd server
+
+    .. data:: port
+
+        the port number of Statsd server
+
+    .. data:: prefix
+
+        the default prefix for all metric names sent from the client
+
+    .. data:: remote_address
+
+        tuple of resolved server address (addr, port). This property is **readonly**.
+
+    .. method:: increment(name, [count=1], [rate=1])
+
+        Increase a :class:`~metrics.Counter` metric by ``count`` with an integer value.
+        An optional sample rate can be specified.
+
+    .. method:: decrement(name, [count=1], [rate=1])
+
+        Decrease a :class:`~metrics.Counter` metric by ``count`` with an integer value.
+        An optional sample rate can be specified.
+
+    .. method:: timing(name, milliseconds, [rate=1])
+
+        Send a :class:`~metrics.Timer` metric for the duration of a task in milliseconds. The ``milliseconds``
+        should be a none-negative numeric value.
+        An optional sample rate can be specified.
+
+    .. method:: gauge(name, value, [rate=1])
+
+        Send a :class:`~metrics.Gauge` metric with the specified value. The ``value`` should be a none-negative
+        numeric value.
+        An optional sample rate can be specified.
+
+    .. method:: set(name, value, [rate=1])
+
+        Send a :class:`~metrics.Set` metric with the specified value. The server will count the number of unique
+        values during each sampling period. The ``value`` could be any value that can be converted
+        to a string.
+        An optional sample rate can be specified.
+
+    .. method:: gauge_delta(name, delta, [rate=1])
+
+        Send a :class:`~metrics.GaugeDelta` metric with the specified delta. The ``delta`` should be
+        a numeric value. An optional sample rate can be specified.
+
+    .. method:: batch_client([size=512])
+
+        Create a :class:`~BatchClient` object, using the same configurations of current client.
+        This batch client could be used as a context manager in a ``with`` statement. After the ``with``
+        block when the context manager exits, all the metrics are flushed to the server in batch requests.
+
+
+.. note::
+
+        Most Statsd servers do not apply the sample rate
+        on timing metrics calculated results (mean, percentile, max, min), gauge or
+        set metrics, but they take the rate into account for the number of received samples.
+        Some statsd servers totally ignore the sample rate for metrics other than counters.
+
+
+Examples
+--------
 
 .. code-block:: python
 
@@ -11,7 +92,9 @@ The client module provides clients for Statsd server to send metrics.
     client.increment("login")
     client.timing("db.search.username", 3500)
 
-The client settings (remote host, port or prefix) can be changed later (if it's required).
+The client settings (remote host, port or prefix) after the instance has been initialized or even used
+to send metrics.
+
 
 .. code-block:: python
 
@@ -26,9 +109,6 @@ The client settings (remote host, port or prefix) can be changed later (if it's 
     client.gauge_delta("memory", -256)
     client.decrement(name="connections", 2)
 
-Sending multiple metrics in batch requests is supported through `BatchClient` class, either
-by using an available client as the context manager:
-
 
 .. code-block:: python
 
@@ -42,7 +122,30 @@ by using an available client as the context manager:
     # now all metrics are flushed automatically in batch requests
 
 
-or by creating a `BatchClient` object explicitly:
+.. class:: BatchClient(host, [port=8125], [prefix=''], [batch_size=512])
+
+    Statsd client extending the default client, but buffers all metrics and sends them
+    in batch UDP requests when instructed to flush the metrics explicitly.
+
+    Each UDP request might contain multiple metrics, but limited to a certain batch size
+    to avoid UDP fragmentation.
+
+    The size of batch requests is not the fixed size of the requests, since metrics can not be broken
+    into multiple requests. So if adding a new metric overflows this size, then that metric will be sent in
+    a new batch request.
+
+
+    .. data:: batch_size
+
+        Size of each batch request. This property is **readonly**.
+
+    .. method:: clear()
+
+        Clear buffered metrics
+
+    .. method:: flush()
+
+        Send the buffered metrics in batch requests.
 
 
 .. code-block:: python

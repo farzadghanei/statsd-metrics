@@ -66,5 +66,5 @@ Statsd metrics is released under the terms of the `MIT license <http://opensourc
 Development
 ===========
 
-- Code is on `GitHub <https://github.com/farzadghanei/statsd-metrics>`_
-- Documentations are on `Read The Docs <https://statsd-metrics.readthedocs.org>`_
+* Code is on `GitHub <https://github.com/farzadghanei/statsd-metrics>`_
+* Documentations are on `Read The Docs <https://statsd-metrics.readthedocs.org>`_
