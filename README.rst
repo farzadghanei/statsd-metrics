@@ -1,7 +1,6 @@
-
-==============
+**************
 Statsd Metrics
-==============
+**************
 
 .. image:: https://travis-ci.org/farzadghanei/statsd-metrics.svg?branch=master
     :target: https://travis-ci.org/farzadghanei/statsd-metrics
@@ -13,11 +12,11 @@ Metric Classes
 --------------
 Available metrics:
 
-- Counter
-- Timer
-- Gauge
-- Set
-- GaugeDelta
+* Counter
+* Timer
+* Gauge
+* Set
+* GaugeDelta
 
 .. code-block:: python
 
@@ -61,7 +60,7 @@ Send Statsd requests
     client.decrement(name="connections", 2)
 
 
-Sending multiple metrics in batch requests is supported through `BatchClient` class, either
+Sending multiple metrics in batch requests is supported through ``BatchClient`` class, either
 by using an available client as the context manager:
 
 
@@ -77,7 +76,7 @@ by using an available client as the context manager:
     # now all metrics are flushed automatically in batch requests
 
 
-or by creating a `BatchClient` object explicitly:
+or by creating a ``BatchClient`` object explicitly:
 
 
 .. code-block:: python
@@ -90,8 +89,14 @@ or by creating a `BatchClient` object explicitly:
     client.flush() # sends one UDP packet to remote server, carrying both metrics
 
 
-Dependencies
+Installation
 ------------
+
+.. code-block:: bash
+
+    pip install statsdmetrics
+
+
 There are no specific dependencies, it runs on Python 2.7+ (CPython 2.7, 3.2, 3.3
 3.4 and 3.5, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
 
@@ -106,8 +111,14 @@ However on development (and test) environment
     pip install -r requirements-dev.txt
 
 
+Development
+-----------
+
+* Code is on `GitHub <https://github.com/farzadghanei/statsd-metrics>`_
+* Documentations are on `Read The Docs <https://statsd-metrics.readthedocs.org>`_
+
 Tests
------
+^^^^^
 
 If you have make available
 
@@ -121,7 +132,9 @@ You can always use the setup.py file
 
     python setup.py test
 
+
 License
 -------
+
 Statsd metrics is released under the terms of the
 `MIT license <http://opensource.org/licenses/MIT>`_.
