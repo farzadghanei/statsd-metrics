@@ -10,7 +10,8 @@ try:
 except ImportError:
     import mock
 
-from statsdmetrics.client import Client, BatchClient, DEFAULT_PORT
+from statsdmetrics.client import (Client, BatchClient, TCPClient,
+                                  DEFAULT_PORT)
 
 
 class MockMixIn():
@@ -33,6 +34,9 @@ class MockMixIn():
 
         self.mock_sendto = mock.MagicMock()
         self.mock_socket.sendto = self.mock_sendto
+
+        self.mock_sendall = mock.MagicMock()
+        self.mock_socket.sendall = self.mock_sendall
 
 
 class ClientTestCaseMixIn(MockMixIn):
@@ -279,6 +283,7 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         ]
         self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
+
 class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
     def setUp(self):
         super(TestBatchClient, self).setUp()
@@ -478,6 +483,11 @@ class TestBatchClient(ClientTestCaseMixIn, unittest.TestCase):
         client.flush()
         self.assertEqual(self.mock_sendto.call_count, 0)
 
+class TestTCPClient(TestClient):
+
+    def setUp(self):
+        super(TestTCPClient, self).setUp()
+        self.clientClass = TCPClient
 
 if __name__ == "__main__":
     unittest.main()

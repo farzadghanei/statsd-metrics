@@ -204,5 +204,7 @@ class BatchClient(Client):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.flush()
 
+class TCPClient(Client):
+    """Statsd client that sends metrics over TCP"""
 
-__all__ = (Client, BatchClient)
+__all__ = (Client, BatchClient, TCPClient)
