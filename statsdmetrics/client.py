@@ -5,6 +5,7 @@ Statsd client to send metrics to server
 """
 
 import socket
+from abc import ABCMeta, abstractmethod
 from random import random
 
 from .metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
@@ -13,18 +14,63 @@ from .metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
 
 DEFAULT_PORT = 8125
 
+class _SharedSocket(object):
+    """Decorate sockets to attach metadata required by clients"""
 
-class Client(object):
-    """Statsd client
+    def __init__(self, sock):
+        self._closed = False
+        self._socket = sock
+        self._clients = []
 
-    >>> client = Client("stats.example.org")
-    >>> client.increment("event")
-    >>> client.increment("event", 3, 0.4) # specify count and sample rate
-    >>> # able to change configurations
-    >>> client.port = 8126
-    >>> client.prefix = "region"
-    >>> client.decrement("event", rate=0.2)
-    """
+    @property
+    def closed(self):
+        return self._closed
+
+    def close(self):
+        """Close the socket to free system resources.
+
+        After the socket is closed, further operations with socket
+        will fail.
+        """
+
+        if not self._closed:
+            self._socket.shutdown()
+            self._socket.close()
+        self.closed = True
+
+    def add_client(self, client):
+        """Add a client as a user of the socket.
+
+        As long as the socket has users, it keeps the underlying
+        socket object open for operations.
+        """
+
+        self._clients.append(client)
+
+    def remove_client(self, client):
+        """Remove the client from the users of the socket.
+
+        If there are no more clients for the socket, it
+        will close automatically.
+        """
+
+        try:
+            self._clients.remove(client)
+        except ValueError:
+            pass
+        if not self._clients:
+            self.close()
+
+    def __del__(self):
+        if self._socket:
+            self._socket.close()
+
+    def __getattr__(self, name):
+        return getattr(self._socket, name)
+
+
+class AbstractClient(object):
+    __metaclass__ = ABCMeta
 
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
         self._port = None
@@ -43,8 +89,9 @@ class Client(object):
     def port(self, port):
         port = int(port)
         assert 0 < port < 65536
+        prev_port = self._port
         self._port = port
-        self._remote_address = None
+        self._on_address_change((self._host, prev_port), (self._host, port))
 
     @property
     def host(self):
@@ -52,8 +99,9 @@ class Client(object):
 
     @host.setter
     def host(self, host):
+        prev_host = self._host
         self._host = host
-        self._remote_address = None
+        self._on_address_change((prev_host, self._port), (host, self._port))
 
     @property
     def remote_address(self):
@@ -62,6 +110,8 @@ class Client(object):
         return self._remote_address
 
     def increment(self, name, count=1, rate=1):
+        """Increment a Counter metric"""
+
         if self._should_send_metric(name, rate):
             self._request(
                 Counter(
@@ -72,6 +122,8 @@ class Client(object):
             )
 
     def decrement(self, name, count=1, rate=1):
+        """Decrement a Counter metric"""
+
         if self._should_send_metric(name, rate):
             self._request(
                 Counter(
@@ -82,6 +134,8 @@ class Client(object):
             )
 
     def timing(self, name, milliseconds, rate=1):
+        """Send a Timer metric with the specified duration in milliseconds"""
+
         if self._should_send_metric(name, rate):
             if not is_numeric(milliseconds):
                 milliseconds = float(milliseconds)
@@ -94,6 +148,8 @@ class Client(object):
             )
 
     def gauge(self, name, value, rate=1):
+        """Send a Gauge metric with the specified vlaue"""
+
         if self._should_send_metric(name, rate):
             if not is_numeric(value):
                 value = float(value)
@@ -106,6 +162,8 @@ class Client(object):
             )
 
     def gauge_delta(self, name, delta, rate=1):
+        """Send a GaugeDelta metric to change a Gauge by the specified value"""
+
         if self._should_send_metric(name, rate):
             if not is_numeric(delta):
                 delta = float(delta)
@@ -118,6 +176,8 @@ class Client(object):
             )
 
     def set(self, name, value, rate=1):
+        """Send a Set metric with the specified unique value"""
+
         if self._should_send_metric(name, rate):
             value = str(value)
             self._request(
@@ -128,11 +188,6 @@ class Client(object):
                 ).to_request()
             )
 
-    def batch_client(self, size=512):
-        batch_client = BatchClient(self.host, self.port, self.prefix, size)
-        batch_client._remote_address = self._remote_address
-        return batch_client
-
     def _create_metric_name_for_request(self, name):
         return self.prefix + normalize_metric_name(name)
 
@@ -141,18 +196,48 @@ class Client(object):
 
     def _get_open_socket(self):
         if self._socket is None:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket = _SharedSocket(
+                    socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
+                )
+            self._socket.add_client(self)
         return self._socket
 
     def _request(self, data):
         self._get_open_socket().sendto(str(data).encode(), self.remote_address)
 
+    def _on_address_change(self, prev_addr, addr):
+        if prev_addr != addr:
+            self._remote_address = None
+
     def __del__(self):
-        if self._socket is not None:
-            self._socket.close()
+        if self._socket:
+            self._socket.remove_client(self)
 
 
-class BatchClient(Client):
+class Client(AbstractClient):
+    """Statsd client
+
+    >>> client = Client("stats.example.org")
+    >>> client.increment("event")
+    >>> client.increment("event", 3, 0.4) # specify count and sample rate
+    >>> # able to change configurations
+    >>> client.port = 8126
+    >>> client.prefix = "region"
+    >>> client.decrement("event", rate=0.2)
+    """
+
+    def batch_client(self, size=512):
+        """Return a batch client with same settings of the client"""
+
+        batch_client = BatchClient(self.host, self.port, self.prefix, size)
+        batch_client._remote_address = self._remote_address
+        sock = self._get_open_socket()
+        batch_client._socket = sock
+        sock.add_client(batch_client)
+        return batch_client
+
+
+class BatchClient(AbstractClient):
     """Statsd client buffering requests and send in batch requests
 
     >>> client = BatchClient("stats.example.org")
@@ -174,6 +259,7 @@ class BatchClient(Client):
 
     def _request(self, data):
         """Override parent by buffering the metric instead of sending now"""
+
         data = bytearray("{}\n".format(data).encode())
         self._prepare_batches_for_storage(len(data))
         self._batches[-1].extend(data)
@@ -188,15 +274,20 @@ class BatchClient(Client):
             self._batches.append(bytearray())
 
     def clear(self):
+        """Clear buffered metrics"""
+
         self._batches = []
+        return self
 
     def flush(self):
         """Send buffered metrics in batch requests"""
+
         address = self.remote_address
         socket_ = self._get_open_socket()
         while len(self._batches) > 0:
             socket_.sendto(self._batches[0], address)
             self._batches.pop(0)
+        return self
 
     def __enter__(self):
         return self
@@ -204,7 +295,38 @@ class BatchClient(Client):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.flush()
 
-class TCPClient(Client):
+
+class TCPClientMixIn(object):
+    """Mix-In class to send metrics over TCP"""
+
+    def reconnect(self):
+        self._disconnect()
+        self._get_open_socket()
+
+    def _on_address_change(self, prev_addr, addr):
+        if prev_addr != addr:
+            self._disconnect()
+            self._remote_address = None
+
+    def _disconnect(self):
+        if self._socket:
+            self._socket.remove_client(self)
+            self._socket = None
+
+    def _get_open_socket(self):
+        if self._socket is None:
+            self._socket = _SharedSocket(
+                    socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                )
+            self._socket.add_client(self)
+            self._socket.connect(self.remote_address)
+        return self._socket
+
+    def _request(self, data):
+        self._get_open_socket().sendall(str(data).encode())
+
+class TCPClient(TCPClientMixIn, Client):
     """Statsd client that sends metrics over TCP"""
+    pass
 
 __all__ = (Client, BatchClient, TCPClient)
