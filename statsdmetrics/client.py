@@ -288,6 +288,8 @@ class TCPClientMixIn(object):
     """Mix-In class to send metrics over TCP"""
 
     def reconnect(self):
+        """Disconnect and reconnect to remote address"""
+
         self._disconnect()
         self._get_open_socket()
 
@@ -315,7 +317,7 @@ class TCPClientMixIn(object):
 
 
 class Client(AbstractClient):
-    """Statsd client
+    """Statsd client, using UDP to send metrics
 
     >>> client = Client("stats.example.org")
     >>> client.increment("event")
@@ -335,7 +337,7 @@ class Client(AbstractClient):
 
 
 class BatchClient(BatchClientMixIn, AbstractClient):
-    """Statsd client buffering requests and send in batch requests
+    """Statsd client buffering requests and send in batch UDP requests
 
     >>> client = BatchClient("stats.example.org")
     >>> client.increment("event")
@@ -349,10 +351,19 @@ class BatchClient(BatchClientMixIn, AbstractClient):
 
 
 class TCPClient(TCPClientMixIn, AbstractClient):
-    """Statsd client that sends metrics over TCP"""
+    """Statsd client using TCP to send metrics
+
+    >>> client = TCPClient("stats.example.org")
+    >>> client.increment("event")
+    >>> client.increment("event", 3, 0.4) # specify count and sample rate
+    >>> # able to change configurations
+    >>> client.port = 8126
+    >>> client.prefix = "region"
+    >>> client.decrement("event", rate=0.2) # reconnects again automatically
+    """
 
     def batch_client(self, size=512):
-        """Return a batch client with same settings of the client"""
+        """Return a TCP batch client with same settings of the TCP client"""
 
         batch_client = TCPBatchClient(self.host, self.port, self.prefix, size)
         self._configure_client(batch_client)
@@ -360,14 +371,20 @@ class TCPClient(TCPClientMixIn, AbstractClient):
 
 
 class TCPBatchClient(BatchClientMixIn, TCPClientMixIn, AbstractClient):
-    """Statsd client that buffers metrics and sends batch requests over TCP"""
+    """Statsd client that buffers metrics and sends batch requests over TCP
+
+    >>> client = TCPBatchClient("stats.example.org")
+    >>> client.increment("event")
+    >>> client.decrement("event.second", 3, 0.5)
+    >>> client.flush()
+    """
 
     def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
         AbstractClient.__init__(self, host, port, prefix)
         BatchClientMixIn.__init__(self, batch_size)
 
     def flush(self):
-        """Send buffered metrics in batch requests"""
+        """Send buffered metrics in batch requests over TCP"""
 
         address = self.remote_address
         sock = self._get_open_socket()
