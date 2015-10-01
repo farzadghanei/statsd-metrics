@@ -384,6 +384,15 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         ]
         self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
+    def test_when_client_is_removed_the_socket_batch_client_socket_is_not_closed(self):
+        client = Client("localhost")
+        batch_client = client.batch_client()
+        sock = batch_client._socket
+        del client
+        self.assertFalse(sock.closed)
+        del batch_client
+        self.assertTrue(sock.closed)
+
 
 class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
@@ -665,6 +674,14 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         client.set("low.rate", 256, 0.1)
         self.assertEqual(self.mock_sendall.call_count, 0)
 
+    def test_when_client_is_removed_the_socket_batch_client_socket_is_not_closed(self):
+        client = Client("localhost")
+        batch_client = client.batch_client()
+        sock = batch_client._socket
+        del client
+        self.assertFalse(sock.closed)
+        del batch_client
+        self.assertTrue(sock.closed)
 
 class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
