@@ -15,8 +15,17 @@ from .metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
 DEFAULT_PORT = 8125
 
 
-class SharedSocket(object):
-    """Decorate sockets to attach metadata required by clients"""
+class AutoClosingSharedSocket(object):
+    """Decorate sockets to attach metadata required by clients.
+
+    The socket object is shared between multiple clients to use
+    and will automatically close the connection when there are
+    no more clients for the socket.
+
+    This is different than a standard socket that resources are
+    released, right at the moment socket is not used anymore and
+    not necessaryly when the object is destroyed.
+    """
 
     def __init__(self, sock):
         self._closed = False
@@ -35,7 +44,7 @@ class SharedSocket(object):
         """
 
         if not self._closed:
-            self._socket.shutdown()
+            self._socket.shutdown(socket.SHUT_RDWR)
             self._socket.close()
         self._closed = True
 
@@ -47,6 +56,7 @@ class SharedSocket(object):
         """
 
         self._clients.append(client)
+        return self
 
     def remove_client(self, client):
         """Remove the client from the users of the socket.
@@ -61,6 +71,7 @@ class SharedSocket(object):
             pass
         if not self._clients:
             self.close()
+        return self
 
     def __del__(self):
         if self._socket:
@@ -197,7 +208,7 @@ class AbstractClient(object):
 
     def _get_open_socket(self):
         if self._socket is None:
-            self._socket = SharedSocket(
+            self._socket = AutoClosingSharedSocket(
                     socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
                 )
             self._socket.add_client(self)
@@ -287,7 +298,7 @@ class TCPClientMixIn(object):
 
     def _get_open_socket(self):
         if self._socket is None:
-            self._socket = SharedSocket(
+            self._socket = AutoClosingSharedSocket(
                     socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 )
             self._socket.add_client(self)

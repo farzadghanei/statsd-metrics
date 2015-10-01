@@ -10,7 +10,7 @@ try:
 except ImportError:
     import mock
 
-from statsdmetrics.client import (SharedSocket, Client, BatchClient, TCPClient,
+from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient, TCPClient,
                                     TCPBatchClient, DEFAULT_PORT)
 
 
@@ -150,7 +150,7 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
         self.mock_socket.close = self.mock_close
 
     def test_call_underlying_socket_methods(self):
-        sock = SharedSocket(self.mock_socket)
+        sock = AutoClosingSharedSocket(self.mock_socket)
         sock.close()
         addr = ("localhost", 8888)
         sock.sendall("sending all", addr)
@@ -160,7 +160,7 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
         self.mock_sendto.assert_called_once_with("sending to", addr)
 
     def test_close_on_no_more_client(self):
-        sock = SharedSocket(self.mock_socket)
+        sock = AutoClosingSharedSocket(self.mock_socket)
         self.assertFalse(sock.closed)
         client = Client("localhost")
         sock.add_client(client)
@@ -170,7 +170,7 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
         self.assertEqual(self.mock_close.call_count, 1)
 
     def test_close_on_destruct(self):
-        sock = SharedSocket(self.mock_socket)
+        sock = AutoClosingSharedSocket(self.mock_socket)
         del sock
         self.assertEqual(self.mock_close.call_count, 1)
 
