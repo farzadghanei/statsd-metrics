@@ -14,7 +14,7 @@ from .metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
 
 DEFAULT_PORT = 8125
 
-class _SharedSocket(object):
+class SharedSocket(object):
     """Decorate sockets to attach metadata required by clients"""
 
     def __init__(self, sock):
@@ -196,7 +196,7 @@ class AbstractClient(object):
 
     def _get_open_socket(self):
         if self._socket is None:
-            self._socket = _SharedSocket(
+            self._socket = SharedSocket(
                     socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
                 )
             self._socket.add_client(self)
@@ -208,6 +208,12 @@ class AbstractClient(object):
     def _on_address_change(self, prev_addr, addr):
         if prev_addr != addr:
             self._remote_address = None
+
+    def _configure_client(self, other):
+        other._remote_address = self._remote_address
+        sock = self._get_open_socket()
+        other._socket = sock
+        sock.add_client(other)
 
     def __del__(self):
         if self._socket:
@@ -230,24 +236,14 @@ class Client(AbstractClient):
         """Return a batch client with same settings of the client"""
 
         batch_client = BatchClient(self.host, self.port, self.prefix, size)
-        batch_client._remote_address = self._remote_address
-        sock = self._get_open_socket()
-        batch_client._socket = sock
-        sock.add_client(batch_client)
+        self._configure_client(batch_client)
         return batch_client
 
 
-class BatchClient(AbstractClient):
-    """Statsd client buffering requests and send in batch requests
+class BatchClientMixIn(object):
+    """MixIn class to clients that buffer metrics and send batch requests"""
 
-    >>> client = BatchClient("stats.example.org")
-    >>> client.increment("event")
-    >>> client.decrement("event.second", 3, 0.5)
-    >>> client.flush()
-    """
-
-    def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
-        super(BatchClient, self).__init__(host, port, prefix)
+    def __init__(self, batch_size=512):
         batch_size = int(batch_size)
         assert batch_size > 0, "BatchClient batch size should be positive"
         self._batch_size = batch_size
@@ -256,6 +252,22 @@ class BatchClient(AbstractClient):
     @property
     def batch_size(self):
         return self._batch_size
+
+    def clear(self):
+        """Clear buffered metrics"""
+
+        self._batches = []
+        return self
+
+    def flush(self):
+        """Send buffered metrics in batch requests"""
+
+        address = self.remote_address
+        sock = self._get_open_socket()
+        while len(self._batches) > 0:
+            sock.sendto(self._batches[0], address)
+            self._batches.pop(0)
+        return self
 
     def _request(self, data):
         """Override parent by buffering the metric instead of sending now"""
@@ -273,27 +285,25 @@ class BatchClient(AbstractClient):
                         (len(self._batches[-1]) + data_size) >= batch_size:
             self._batches.append(bytearray())
 
-    def clear(self):
-        """Clear buffered metrics"""
-
-        self._batches = []
-        return self
-
-    def flush(self):
-        """Send buffered metrics in batch requests"""
-
-        address = self.remote_address
-        socket_ = self._get_open_socket()
-        while len(self._batches) > 0:
-            socket_.sendto(self._batches[0], address)
-            self._batches.pop(0)
-        return self
-
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.flush()
+
+
+class BatchClient(BatchClientMixIn, AbstractClient):
+    """Statsd client buffering requests and send in batch requests
+
+    >>> client = BatchClient("stats.example.org")
+    >>> client.increment("event")
+    >>> client.decrement("event.second", 3, 0.5)
+    >>> client.flush()
+    """
+
+    def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
+        AbstractClient.__init__(self, host, port, prefix)
+        BatchClientMixIn.__init__(self, batch_size)
 
 
 class TCPClientMixIn(object):
@@ -303,11 +313,6 @@ class TCPClientMixIn(object):
         self._disconnect()
         self._get_open_socket()
 
-    def _on_address_change(self, prev_addr, addr):
-        if prev_addr != addr:
-            self._disconnect()
-            self._remote_address = None
-
     def _disconnect(self):
         if self._socket:
             self._socket.remove_client(self)
@@ -315,7 +320,7 @@ class TCPClientMixIn(object):
 
     def _get_open_socket(self):
         if self._socket is None:
-            self._socket = _SharedSocket(
+            self._socket = SharedSocket(
                     socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 )
             self._socket.add_client(self)
@@ -325,8 +330,39 @@ class TCPClientMixIn(object):
     def _request(self, data):
         self._get_open_socket().sendall(str(data).encode())
 
-class TCPClient(TCPClientMixIn, Client):
-    """Statsd client that sends metrics over TCP"""
-    pass
+    def _on_address_change(self, prev_addr, addr):
+        if prev_addr != addr:
+            self._disconnect()
+            self._remote_address = None
 
-__all__ = (Client, BatchClient, TCPClient)
+
+class TCPClient(TCPClientMixIn, AbstractClient):
+    """Statsd client that sends metrics over TCP"""
+
+    def batch_client(self, size=512):
+        """Return a batch client with same settings of the client"""
+
+        batch_client = TCPBatchClient(self.host, self.port, self.prefix, size)
+        self._configure_client(batch_client)
+        return batch_client
+
+
+class TCPBatchClient(BatchClientMixIn, TCPClientMixIn, AbstractClient):
+    """Statsd client that buffers metrics and sends batch requests over TCP"""
+
+    def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
+        AbstractClient.__init__(self, host, port, prefix)
+        BatchClientMixIn.__init__(self, batch_size)
+
+    def flush(self):
+        """Send buffered metrics in batch requests"""
+
+        address = self.remote_address
+        sock = self._get_open_socket()
+        while len(self._batches) > 0:
+            sock.sendall(self._batches[0])
+            self._batches.pop(0)
+        return self
+
+
+__all__ = (Client, BatchClient, TCPClient, TCPBatchClient)
