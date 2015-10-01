@@ -14,6 +14,7 @@ from .metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
 
 DEFAULT_PORT = 8125
 
+
 class SharedSocket(object):
     """Decorate sockets to attach metadata required by clients"""
 
@@ -36,7 +37,7 @@ class SharedSocket(object):
         if not self._closed:
             self._socket.shutdown()
             self._socket.close()
-        self.closed = True
+        self._closed = True
 
     def add_client(self, client):
         """Add a client as a user of the socket.
@@ -334,7 +335,6 @@ class BatchClient(BatchClientMixIn, AbstractClient):
     def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
         AbstractClient.__init__(self, host, port, prefix)
         BatchClientMixIn.__init__(self, batch_size)
-
 
 
 class TCPClient(TCPClientMixIn, AbstractClient):

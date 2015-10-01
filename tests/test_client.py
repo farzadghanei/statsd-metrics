@@ -10,7 +10,7 @@ try:
 except ImportError:
     import mock
 
-from statsdmetrics.client import (Client, BatchClient, TCPClient,
+from statsdmetrics.client import (SharedSocket, Client, BatchClient, TCPClient,
                                     TCPBatchClient, DEFAULT_PORT)
 
 
@@ -140,6 +140,39 @@ class BatchClientTestCaseMixIn(ClientTestCaseMixIn):
         client = self.clientClass("localhost")
         with self.assertRaises(AttributeError):
             client.batch_size = 512
+
+
+class TestSharedSocket(MockMixIn, unittest.TestCase):
+
+    def setUp(self):
+        self.doMock()
+        self.mock_close = mock.MagicMock();
+        self.mock_socket.close = self.mock_close
+
+    def test_call_underlying_socket_methods(self):
+        sock = SharedSocket(self.mock_socket)
+        sock.close()
+        addr = ("localhost", 8888)
+        sock.sendall("sending all", addr)
+        sock.sendto("sending to", addr)
+        self.assertEqual(self.mock_close.call_count, 1)
+        self.mock_sendall.assert_called_once_with("sending all", addr)
+        self.mock_sendto.assert_called_once_with("sending to", addr)
+
+    def test_close_on_no_more_client(self):
+        sock = SharedSocket(self.mock_socket)
+        self.assertFalse(sock.closed)
+        client = Client("localhost")
+        sock.add_client(client)
+        self.assertFalse(sock.closed)
+        sock.remove_client(client)
+        self.assertTrue(sock.closed)
+        self.assertEqual(self.mock_close.call_count, 1)
+
+    def test_close_on_destruct(self):
+        sock = SharedSocket(self.mock_socket)
+        del sock
+        self.assertEqual(self.mock_close.call_count, 1)
 
 
 class TestClient(ClientTestCaseMixIn, unittest.TestCase):
