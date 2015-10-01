@@ -43,9 +43,14 @@ class AutoClosingSharedSocket(object):
         will fail.
         """
 
-        if not self._closed:
+        if self._closed:
+            return
+
+        try:
             self._socket.shutdown(socket.SHUT_RDWR)
-            self._socket.close()
+        except OSError as e:
+            pass
+        self._socket.close()
         self._closed = True
 
     def add_client(self, client):
@@ -55,7 +60,7 @@ class AutoClosingSharedSocket(object):
         socket object open for operations.
         """
 
-        self._clients.append(client)
+        self._clients.append(id(client))
         return self
 
     def remove_client(self, client):
@@ -66,9 +71,10 @@ class AutoClosingSharedSocket(object):
         """
 
         try:
-            self._clients.remove(client)
+            self._clients.remove(id(client))
         except ValueError:
             pass
+
         if not self._clients:
             self.close()
         return self
@@ -230,6 +236,7 @@ class AbstractClient(object):
     def __del__(self):
         if self._socket:
             self._socket.remove_client(self)
+            self._socket = None
 
 
 class BatchClientMixIn(object):
