@@ -220,26 +220,6 @@ class AbstractClient(object):
             self._socket.remove_client(self)
 
 
-class Client(AbstractClient):
-    """Statsd client
-
-    >>> client = Client("stats.example.org")
-    >>> client.increment("event")
-    >>> client.increment("event", 3, 0.4) # specify count and sample rate
-    >>> # able to change configurations
-    >>> client.port = 8126
-    >>> client.prefix = "region"
-    >>> client.decrement("event", rate=0.2)
-    """
-
-    def batch_client(self, size=512):
-        """Return a batch client with same settings of the client"""
-
-        batch_client = BatchClient(self.host, self.port, self.prefix, size)
-        self._configure_client(batch_client)
-        return batch_client
-
-
 class BatchClientMixIn(object):
     """MixIn class to clients that buffer metrics and send batch requests"""
 
@@ -292,20 +272,6 @@ class BatchClientMixIn(object):
         self.flush()
 
 
-class BatchClient(BatchClientMixIn, AbstractClient):
-    """Statsd client buffering requests and send in batch requests
-
-    >>> client = BatchClient("stats.example.org")
-    >>> client.increment("event")
-    >>> client.decrement("event.second", 3, 0.5)
-    >>> client.flush()
-    """
-
-    def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
-        AbstractClient.__init__(self, host, port, prefix)
-        BatchClientMixIn.__init__(self, batch_size)
-
-
 class TCPClientMixIn(object):
     """Mix-In class to send metrics over TCP"""
 
@@ -334,6 +300,41 @@ class TCPClientMixIn(object):
         if prev_addr != addr:
             self._disconnect()
             self._remote_address = None
+
+
+class Client(AbstractClient):
+    """Statsd client
+
+    >>> client = Client("stats.example.org")
+    >>> client.increment("event")
+    >>> client.increment("event", 3, 0.4) # specify count and sample rate
+    >>> # able to change configurations
+    >>> client.port = 8126
+    >>> client.prefix = "region"
+    >>> client.decrement("event", rate=0.2)
+    """
+
+    def batch_client(self, size=512):
+        """Return a batch client with same settings of the client"""
+
+        batch_client = BatchClient(self.host, self.port, self.prefix, size)
+        self._configure_client(batch_client)
+        return batch_client
+
+
+class BatchClient(BatchClientMixIn, AbstractClient):
+    """Statsd client buffering requests and send in batch requests
+
+    >>> client = BatchClient("stats.example.org")
+    >>> client.increment("event")
+    >>> client.decrement("event.second", 3, 0.5)
+    >>> client.flush()
+    """
+
+    def __init__(self, host, port=DEFAULT_PORT, prefix="", batch_size=512):
+        AbstractClient.__init__(self, host, port, prefix)
+        BatchClientMixIn.__init__(self, batch_size)
+
 
 
 class TCPClient(TCPClientMixIn, AbstractClient):
