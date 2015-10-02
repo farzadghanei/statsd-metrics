@@ -24,24 +24,24 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         client = self.clientClass("localhost")
         client._socket = self.mock_socket
         client.increment("event")
-        self.mock_sendall.assert_called_with("event:1|c".encode())
+        self.mock_sendall.assert_called_with("event:1|c\n".encode())
         client.increment("region.event name", 2, 0.5)
-        self.mock_sendall.assert_called_with("region.event_name:2|c|@0.5".encode())
+        self.mock_sendall.assert_called_with("region.event_name:2|c|@0.5\n".encode())
 
     def test_decrement(self):
         client = self.clientClass("localhost")
         client._socket = self.mock_socket
         client.decrement("event")
         self.mock_sendall.assert_called_with(
-            "event:-1|c".encode()
+            "event:-1|c\n".encode()
         )
         client.decrement("event2", 5)
         self.mock_sendall.assert_called_with(
-            "event2:-5|c".encode()
+            "event2:-5|c\n".encode()
         )
         client.decrement("region.event name", 2, 0.5)
         self.mock_sendall.assert_called_with(
-            "region.event_name:-2|c|@0.5".encode()
+            "region.event_name:-2|c|@0.5\n".encode()
         )
 
     def test_timing(self):
@@ -49,17 +49,17 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         client._socket = self.mock_socket
         client.timing("event", 10)
         self.mock_sendall.assert_called_with(
-            "event:10|ms".encode()
+            "event:10|ms\n".encode()
         )
         client.timing("db.event name", 34.5, 0.5)
         self.mock_sendall.assert_called_with(
-            "db.event_name:34.5|ms|@0.5".encode(),
+            "db.event_name:34.5|ms|@0.5\n".encode(),
         )
 
         client.prefix = "region.c_"
         client.timing("db/query", rate=0.7, milliseconds=22.22)
         self.mock_sendall.assert_called_with(
-            "region.c_db-query:22.22|ms|@0.7".encode(),
+            "region.c_db-query:22.22|ms|@0.7\n".encode(),
         )
 
         self.mock_sendall.reset_mock()
@@ -73,13 +73,13 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         client._socket = self.mock_socket
         client.gauge("memory", 10240)
         self.mock_sendall.assert_called_with(
-            "memory:10240|g".encode()
+            "memory:10240|g\n".encode()
         )
 
         client.prefix = "region."
         client.gauge("cpu percentage%", rate=0.9, value=98.3)
         self.mock_sendall.assert_called_with(
-            "region.cpu_percentage:98.3|g|@0.9".encode()
+            "region.cpu_percentage:98.3|g|@0.9\n".encode()
         )
 
         self.mock_sendall.reset_mock()
@@ -92,12 +92,12 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         client = self.clientClass("localhost")
         client._socket = self.mock_socket
         client.gauge_delta("memory!", 128)
-        self.mock_sendall.assert_called_with("memory:+128|g".encode())
+        self.mock_sendall.assert_called_with("memory:+128|g\n".encode())
 
         client.prefix = "region."
         client.gauge_delta("cpu percentage%", rate=0.9, delta=-12)
         self.mock_sendall.assert_called_with(
-            "region.cpu_percentage:-12|g|@0.9".encode()
+            "region.cpu_percentage:-12|g|@0.9\n".encode()
         )
 
         self.mock_sendall.reset_mock()
@@ -109,13 +109,13 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         client._socket = self.mock_socket
         client.set("ip address", "10.10.10.1")
         self.mock_sendall.assert_called_with(
-            "ip_address:10.10.10.1|s".encode()
+            "ip_address:10.10.10.1|s\n".encode()
         )
 
         client.prefix = "region."
         client.set("~username*", rate=0.9, value='first')
         self.mock_sendall.assert_called_with(
-            "region.username:first|s|@0.9".encode()
+            "region.username:first|s|@0.9\n".encode()
         )
 
         self.mock_sendall.reset_mock()

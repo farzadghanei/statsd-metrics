@@ -34,7 +34,7 @@ class TCPClientMixIn(object):
         return self._socket
 
     def _request(self, data):
-        self._get_open_socket().sendall(str(data).encode())
+        self._get_open_socket().sendall("{}\n".format(data).encode())
 
     def _on_address_change(self, prev_addr, addr):
         if prev_addr != addr:
