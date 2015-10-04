@@ -4,6 +4,7 @@ tests.test_client
 unittests for statsdmetrics.client module
 """
 
+import gc
 import unittest
 try:
     import unittest.mock as mock
@@ -127,9 +128,9 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         batch_client = client.batch_client()
         sock = batch_client._socket
         del client
+        gc.collect()
         self.assertFalse(sock.closed)
-        del batch_client
-        self.assertTrue(sock.closed)
+
 
 class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 

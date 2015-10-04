@@ -3,7 +3,7 @@ Client
 ******
 
 To send the metrics to Statsd server, client classes are available
-in the :mod:`client` module.
+in the :mod:`client` package and :mod:`client.tcp` module.
 
 
 :mod:`client` -- Statsd client
@@ -19,11 +19,11 @@ in the :mod:`client` module.
 
     .. data:: host
 
-        the host name (or IP address) of Statsd server
+        the host name (or IP address) of Statsd server. This property is **readonly**.
 
     .. data:: port
 
-        the port number of Statsd server
+        the port number of Statsd server. This property is **readonly**.
 
     .. data:: prefix
 
@@ -31,7 +31,7 @@ in the :mod:`client` module.
 
     .. data:: remote_address
 
-        tuple of resolved server address (addr, port). This property is **readonly**.
+        tuple of resolved server address (host, port). This property is **readonly**.
 
     .. method:: increment(name, [count=1], [rate=1])
 
@@ -91,24 +91,9 @@ Examples
     client = Client("stats.example.org")
     client.increment("login")
     client.timing("db.search.username", 3500)
-
-The client settings (remote host, port or prefix) after the instance has been initialized or even used
-to send metrics.
-
-
-.. code-block:: python
-
-    from statsdmetrics.client import Client
-
-    client = Client("stats.example.org")
-    client.increment("login")
-    # settings can be updated later
-    client.host = "localhost"
-    client.port = 8126
     client.prefix = "other"
     client.gauge_delta("memory", -256)
-    client.decrement(name="connections", 2)
-
+    client.decrement(name="connections", count=2)
 
 .. code-block:: python
 
@@ -117,15 +102,15 @@ to send metrics.
     client = Client("stats.example.org")
     with client.batch_client() as batch_client:
         batch_client.increment("login")
-        batch_client.decrement(name="connections", 2)
+        batch_client.decrement(name="connections", count=2)
         batch_client.timing("db.search.username", 3500)
     # now all metrics are flushed automatically in batch requests
 
 
 .. class:: BatchClient(host, [port=8125], [prefix=''], [batch_size=512])
 
-    Statsd client extending the default client, but buffers all metrics and sends them
-    in batch UDP requests when instructed to flush the metrics explicitly.
+    Statsd client that buffers all metrics and sends them in batch requests
+    over UDP when instructed to flush the metrics explicitly.
 
     Each UDP request might contain multiple metrics, but limited to a certain batch size
     to avoid UDP fragmentation.
@@ -157,3 +142,58 @@ to send metrics.
     client.gauge("memory", 20480)
     client.flush() # sends one UDP packet to remote server, carrying both metrics
 
+
+:mod:`client.tcp` -- Statsd client sending metrics over TCP
+===========================================================
+
+.. module:: client.tcp
+    :synopsis: Define Statsd client classes that send metrics over TCP
+.. moduleauthor:: Farzad Ghanei
+
+.. class:: TCPClient(host, [port=8125], [prefix=''])
+
+    Statsd client that sends each metric in separate requests over TCP.
+
+    Provides the same interface as :class:`~client.Client`.
+
+Examples
+--------
+
+.. code-block:: python
+
+    from statsdmetrics.client.tcp import TCPClient
+    client = TCPClient("stats.example.org")
+    client.increment("login")
+    client.timing("db.search.username", 3500)
+    client.prefix = "other"
+    client.gauge_delta("memory", -256)
+    client.decrement(name="connections", count=2)
+
+.. code-block:: python
+
+    from statsdmetrics.client.tcp import TCPClient
+
+    client = TCPClient("stats.example.org")
+    with client.batch_client() as batch_client:
+        batch_client.increment("login")
+        batch_client.decrement(name="connections", count=2)
+        batch_client.timing("db.search.username", 3500)
+    # now all metrics are flushed automatically in batch requests
+
+
+.. class:: TCPBatchClient(host, [port=8125], [prefix=''], [batch_size=512])
+
+    Statsd client that buffers all metrics and sends them in batch requests
+    over TCP when instructed to flush the metrics explicitly.
+
+    Provides the same interface as :class:`~client.BatchClient`.
+
+
+.. code-block:: python
+
+    from statsdmetrics.client.tcp import TCPBatchClient
+
+    client = TCPBatchClient("stats.example.org")
+    client.set("unique.ip_address", "10.10.10.1")
+    client.gauge("memory", 20480)
+    client.flush() # sends one TCP packet to remote server, carrying both metrics

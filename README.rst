@@ -42,6 +42,11 @@ Parse metrics from a Statsd request
 
 Statsd Client
 -------------
+* ``client.Client``: Default client, sends request on each call using UDP
+* ``client.BatchClient``: Buffers metrics and flushes them in batch requests using UDP
+* ``client.tcp.TCPClient``: Sends request on each call using TCP
+* ``client.tcp.TCPBatchClient``: Buffers metrics and flushes them in batch requests using TCP
+
 Send Statsd requests
 
 .. code-block:: python
@@ -50,14 +55,11 @@ Send Statsd requests
 
     client = Client("stats.example.org")
     client.increment("login")
+    client.decrement("connections", 2)
     client.timing("db.search.username", 3500)
-    client.set("unique.ip_address", "10.10.10.1")
     client.gauge("memory", 20480)
-    # settings can be updated later
-    client.host = "localhost"
-    client.port = 8126
     client.gauge_delta("memory", -256)
-    client.decrement(name="connections", 2)
+    client.set("unique.ip_address", "10.10.10.1")
 
 
 Sending multiple metrics in batch requests is supported through ``BatchClient`` class, either
@@ -71,7 +73,7 @@ by using an available client as the context manager:
     client = Client("stats.example.org")
     with client.batch_client() as batch_client:
         batch_client.increment("login")
-        batch_client.decrement(name="connections", 2)
+        batch_client.decrement("connections", 2)
         batch_client.timing("db.search.username", 3500)
     # now all metrics are flushed automatically in batch requests
 
