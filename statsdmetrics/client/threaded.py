@@ -46,8 +46,8 @@ class TCPClient(ThreadedTCPClientMixIn, DefaultTCPClient):
 
     >>> client = TCPClient("stats.example.org")
     >>> client.increment("event")
-    >>> client.increment("event", 3, 0.4) # specify count and sample rate
-    >>> client.decrement("event", rate=0.2) # reconnects again automatically
+    >>> client.increment("event", 3, 0.4)
+    >>> client.decrement("event", rate=0.2)
     """
 
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
@@ -57,5 +57,6 @@ class TCPClient(ThreadedTCPClientMixIn, DefaultTCPClient):
     def __del__(self):
         ThreadedTCPClientMixIn.__del__(self)
         DefaultTCPClient.__del__(self)
+
 
 __all__ = (TCPClient,)
