@@ -10,7 +10,7 @@ try:
 except ImportError:
     import mock
 
-from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient, DEFAULT_PORT)
+from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
 from . import MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
 
 
@@ -24,12 +24,12 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
     def test_call_underlying_socket_methods(self):
         sock = AutoClosingSharedSocket(self.mock_socket)
         sock.close()
-        addr = ("localhost", 8888)
-        sock.sendall("sending all", addr)
-        sock.sendto("sending to", addr)
+        address = ("localhost", 8888)
+        sock.sendall("sending all", address)
+        sock.sendto("sending to", address)
         self.assertEqual(self.mock_close.call_count, 1)
-        self.mock_sendall.assert_called_once_with("sending all", addr)
-        self.mock_sendto.assert_called_once_with("sending to", addr)
+        self.mock_sendall.assert_called_once_with("sending all", address)
+        self.mock_sendto.assert_called_once_with("sending to", address)
 
     def test_close_on_no_more_client(self):
         sock = AutoClosingSharedSocket(self.mock_socket)
@@ -68,12 +68,11 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
             ("127.0.0.2", 8125)
         )
 
-        client.port = 8000
         client.prefix = "region.c_"
         client.increment("@login#", rate=0.6)
         self.mock_sendto.assert_called_with(
             "region.c_login:1|c|@0.6".encode(),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
         self.mock_sendto.reset_mock()
@@ -100,11 +99,10 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         )
 
         client.prefix = "region.c_"
-        client.port = 8000
         client.decrement("active!users", rate=0.7)
         self.mock_sendto.assert_called_with(
             "region.c_activeusers:-1|c|@0.7".encode(),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
         self.mock_sendto.reset_mock()
@@ -126,11 +124,10 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         )
 
         client.prefix = "region.c_"
-        client.port = 8000
         client.timing("db/query", rate=0.7, milliseconds=22.22)
         self.mock_sendto.assert_called_with(
             "region.c_db-query:22.22|ms|@0.7".encode(),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
         self.mock_sendto.reset_mock()
@@ -149,11 +146,10 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         )
 
         client.prefix = "region."
-        client.port = 9000
         client.gauge("cpu percentage%", rate=0.9, value=98.3)
         self.mock_sendto.assert_called_with(
             "region.cpu_percentage:98.3|g|@0.9".encode(),
-            ("127.0.0.2", 9000)
+            ("127.0.0.2", 8125)
         )
 
         self.mock_sendto.reset_mock()
@@ -172,11 +168,10 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         )
 
         client.prefix = "region."
-        client.port = 9000
         client.gauge_delta("cpu percentage%", rate=0.9, delta=-12)
         self.mock_sendto.assert_called_with(
             "region.cpu_percentage:-12|g|@0.9".encode(),
-            ("127.0.0.2", 9000)
+            ("127.0.0.2", 8125)
         )
 
         self.mock_sendto.reset_mock()
@@ -193,11 +188,10 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         )
 
         client.prefix = "region."
-        client.port = 9000
         client.set("~username*", rate=0.9, value='first')
         self.mock_sendto.assert_called_with(
             "region.username:first|s|@0.9".encode(),
-            ("127.0.0.2", 9000)
+            ("127.0.0.2", 8125)
         )
 
         self.mock_sendto.reset_mock()
@@ -240,22 +234,6 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         ]
         self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
-    def test_changing_remote_addr_in_context_does_not_affect_batch_client(self):
-        client = Client("localhost")
-        client._socket = self.mock_socket
-
-        with client.batch_client() as batch_client:
-            batch_client.increment("event", rate=0.5)
-            client.port = 8888
-            batch_client.timing("query", 1200)
-            self.assertEqual(client.remote_address, ("127.0.0.2", 8888))
-            self.assertEqual(batch_client.remote_address, ("127.0.0.2", 8125))
-
-        expected_calls = [
-                mock.call(bytearray("event:1|c|@0.5\nquery:1200|ms\n".encode()), ("127.0.0.2", 8125)),
-        ]
-        self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
-
     def test_when_client_is_removed_the_socket_batch_client_socket_is_not_closed(self):
         client = Client("localhost")
         batch_client = client.batch_client()
@@ -282,7 +260,6 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
             ("127.0.0.2", 8125)
         )
         self.mock_sendto.reset_mock()
-        client.port = 8000
         client.prefix = "pre."
         client.increment("login")
         client.increment("login.fail", 5, 0.2)
@@ -290,7 +267,7 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         client.flush()
         self.mock_sendto.assert_called_once_with(
             bytearray("pre.login:1|c\npre.login.ok:1|c|@0.8\n".encode()),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
     def test_decrement(self):
@@ -304,7 +281,6 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         )
         self.mock_sendto.reset_mock()
         client.prefix = "pre."
-        client.port = 8000
         client.decrement("session")
         client.decrement("session.fail", 2, 0.2)
         client.decrement("session.ok", rate=0.6)
@@ -312,7 +288,7 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
         self.mock_sendto.assert_called_once_with(
             bytearray("pre.session:-1|c\npre.session.ok:-1|c|@0.6\n".encode()),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
     def test_timing(self):
@@ -326,7 +302,6 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         )
         self.mock_sendto.reset_mock()
         client.prefix = "pre."
-        client.port = 8000
         client.timing("query", 3)
         client.timing("process.request", 2, 0.2)
         client.timing("query.user", 350, rate=0.6)
@@ -334,7 +309,7 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
         self.mock_sendto.assert_called_once_with(
             bytearray("pre.query:3|ms\npre.query.user:350|ms|@0.6\n".encode()),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
     def test_gauge(self):
@@ -348,7 +323,6 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         )
         self.mock_sendto.reset_mock()
         client.prefix = "pre."
-        client.port = 8000
         client.gauge("memory", 2048)
         client.gauge("memory", 8096, 0.2)
         client.gauge("storage", 512, rate=0.6)
@@ -356,7 +330,7 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
         self.mock_sendto.assert_called_once_with(
             bytearray("pre.memory:2048|g\npre.storage:512|g|@0.6\n".encode()),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
     def test_gauge_delta(self):
@@ -370,7 +344,6 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         )
         self.mock_sendto.reset_mock()
         client.prefix = "pre."
-        client.port = 8000
         client.gauge_delta("memory", 2048)
         client.gauge_delta("memory", 8096, 0.2)
         client.gauge_delta("storage", -128, rate=0.7)
@@ -378,7 +351,7 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
         self.mock_sendto.assert_called_once_with(
             bytearray("pre.memory:+2048|g\npre.storage:-128|g|@0.7\n".encode()),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
     def test_set(self):
@@ -392,7 +365,6 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         )
         self.mock_sendto.reset_mock()
         client.prefix = "pre."
-        client.port = 8000
         client.set("user", 'second')
         client.set("user", 'third', 0.2)
         client.set("user", 'last', rate=0.5)
@@ -400,7 +372,7 @@ class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
         self.mock_sendto.assert_called_once_with(
             bytearray("pre.user:second|s\npre.user:last|s|@0.5\n".encode()),
-            ("127.0.0.2", 8000)
+            ("127.0.0.2", 8125)
         )
 
     def test_metrics_partitioned_into_batches(self):

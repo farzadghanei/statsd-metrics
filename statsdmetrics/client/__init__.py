@@ -45,7 +45,7 @@ class AutoClosingSharedSocket(object):
 
         try:
             self._socket.shutdown(socket.SHUT_RDWR)
-        except OSError as e:
+        except OSError:
             pass
         self._socket.close()
         self._closed = True
@@ -90,31 +90,22 @@ class AbstractClient(object):
         self._host = None
         self._remote_address = None
         self._socket = None
-        self.host = host
-        self.port = port
+        self._host = host
+        self._set_port(port)
         self.prefix = prefix
 
     @property
     def port(self):
         return self._port
 
-    @port.setter
-    def port(self, port):
+    def _set_port(self, port):
         port = int(port)
         assert 0 < port < 65536
-        prev_port = self._port
         self._port = port
-        self._on_address_change((self._host, prev_port), (self._host, port))
 
     @property
     def host(self):
         return self._host
-
-    @host.setter
-    def host(self, host):
-        prev_host = self._host
-        self._host = host
-        self._on_address_change((prev_host, self._port), (host, self._port))
 
     @property
     def remote_address(self):
@@ -218,10 +209,6 @@ class AbstractClient(object):
     def _request(self, data):
         self._get_open_socket().sendto(str(data).encode(), self.remote_address)
 
-    def _on_address_change(self, prev_addr, addr):
-        if prev_addr != addr:
-            self._remote_address = None
-
     def _configure_client(self, other):
         other._remote_address = self._remote_address
         sock = self._get_open_socket()
@@ -291,10 +278,7 @@ class Client(AbstractClient):
 
     >>> client = Client("stats.example.org")
     >>> client.increment("event")
-    >>> client.increment("event", 3, 0.4) # specify count and sample rate
-    >>> # able to change configurations
-    >>> client.port = 8126
-    >>> client.prefix = "region"
+    >>> client.increment("event", 3, 0.4)
     >>> client.decrement("event", rate=0.2)
     """
 

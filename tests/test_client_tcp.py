@@ -131,6 +131,7 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         del batch_client
         self.assertTrue(sock.closed)
 
+
 class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
 
     def setUp(self):
