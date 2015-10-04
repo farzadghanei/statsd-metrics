@@ -4,6 +4,8 @@ tests.test_client
 unittests for statsdmetrics.client module
 """
 
+import platform
+import gc
 import unittest
 try:
     import unittest.mock as mock
@@ -41,9 +43,14 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
         self.assertTrue(sock.closed)
         self.assertEqual(self.mock_close.call_count, 1)
 
+    @unittest.skipIf(
+        platform.python_implementation().lower() == 'jython',
+        "Jython is not calling __del__ even if gc is called explicitly"
+    )
     def test_close_on_destruct(self):
         sock = AutoClosingSharedSocket(self.mock_socket)
         del sock
+        gc.collect()
         self.assertEqual(self.mock_close.call_count, 1)
 
 
@@ -239,9 +246,8 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         batch_client = client.batch_client()
         sock = batch_client._socket
         del client
+        gc.collect()
         self.assertFalse(sock.closed)
-        del batch_client
-        self.assertTrue(sock.closed)
 
 
 class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
