@@ -55,7 +55,7 @@ Send Statsd requests
 
     client = Client("stats.example.org")
     client.increment("login")
-    client.decrement(name="connections", 2)
+    client.decrement("connections", 2)
     client.timing("db.search.username", 3500)
     client.gauge("memory", 20480)
     client.gauge_delta("memory", -256)
@@ -73,7 +73,7 @@ by using an available client as the context manager:
     client = Client("stats.example.org")
     with client.batch_client() as batch_client:
         batch_client.increment("login")
-        batch_client.decrement(name="connections", 2)
+        batch_client.decrement("connections", 2)
         batch_client.timing("db.search.username", 3500)
     # now all metrics are flushed automatically in batch requests
 

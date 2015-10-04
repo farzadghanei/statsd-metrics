@@ -93,7 +93,7 @@ Examples
     client.timing("db.search.username", 3500)
     client.prefix = "other"
     client.gauge_delta("memory", -256)
-    client.decrement(name="connections", 2)
+    client.decrement(name="connections", count=2)
 
 .. code-block:: python
 
@@ -102,7 +102,7 @@ Examples
     client = Client("stats.example.org")
     with client.batch_client() as batch_client:
         batch_client.increment("login")
-        batch_client.decrement(name="connections", 2)
+        batch_client.decrement(name="connections", count=2)
         batch_client.timing("db.search.username", 3500)
     # now all metrics are flushed automatically in batch requests
 
@@ -167,7 +167,7 @@ Examples
     client.timing("db.search.username", 3500)
     client.prefix = "other"
     client.gauge_delta("memory", -256)
-    client.decrement(name="connections", 2)
+    client.decrement(name="connections", count=2)
 
 .. code-block:: python
 
@@ -176,7 +176,7 @@ Examples
     client = TCPClient("stats.example.org")
     with client.batch_client() as batch_client:
         batch_client.increment("login")
-        batch_client.decrement(name="connections", 2)
+        batch_client.decrement(name="connections", count=2)
         batch_client.timing("db.search.username", 3500)
     # now all metrics are flushed automatically in batch requests
 
