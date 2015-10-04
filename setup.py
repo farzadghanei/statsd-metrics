@@ -53,7 +53,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as fh:
 
 setup_params = dict(
     name = "statsdmetrics",
-    packages = ["statsdmetrics"],
+    packages = ["statsdmetrics", "statsdmetrics.client"],
     version = __version__,
     description = "Metric classes for Statsd",
     long_description = long_description,
