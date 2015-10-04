@@ -42,6 +42,11 @@ Parse metrics from a Statsd request
 
 Statsd Client
 -------------
+* ``client.Client``: Default client, sends request on each call using UDP
+* ``client.BatchClient``: Buffers metrics and flushes them in batch requests using UDP
+* ``client.tcp.TCPClient``: Sends request on each call using TCP
+* ``client.tcp.TCPBatchClient``: Buffers metrics and flushes them in batch requests using TCP
+
 Send Statsd requests
 
 .. code-block:: python

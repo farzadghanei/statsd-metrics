@@ -33,8 +33,10 @@ and return the corresponding metric object. This could be used on the server sid
 
 Clients
 -------
-- :class:`~client.Client`: Default client, sends request on each call direclty.
-- :class:`~client.BatchClient`: Buffers metrics and flushes them in batch requests.
+* :class:`~client.Client`: Default client, sends request on each call using UDP
+* :class:`~client.BatchClient`: Buffers metrics and flushes them in batch requests using UDP
+* :class:`~client.tcp.TCPClient`: Sends request on each call using TCP
+* :class:`~client.tcp.TCPBatchClient`: Buffers metrics and flushes them in batch requests using TCP
 
 Installation
 ============
