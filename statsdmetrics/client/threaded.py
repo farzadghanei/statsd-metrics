@@ -1,10 +1,10 @@
 """
 statsdmetrics.client.threaded
 -----------------------------
-Statsd clients to send metrics to server over TCP over different threads
+Statsd clients to send metrics to server in a separate thread
 """
 
-from threading import Thread, Event
+from threading import Thread
 
 try:
     import Queue as queue
@@ -18,43 +18,27 @@ from .tcp import TCPClient as DefaultTCPClient
 class ThreadedTCPClientMixIn(object):
 
     def __init__(self):
+        self._stop_sending_metrics_sentinel = "__STOP__"
         self._request_queue = queue.Queue()
-        self._closed = Event()
-
-        self._sending_thread  = Thread(target=self._send_queued_requests)
+        self._sending_thread = Thread(target=self._send_queued_requests)
         self._sending_thread.daemon = True
         self._sending_thread.start()
 
     def _request(self, data):
-        if self._closed.isSet():
-            raise Exception("ThreadedTCPClient is closed and will not accept new metrics")
         self._request_queue.put("{}\n".format(data).encode())
 
     def _send_queued_requests(self):
         while True:
-            if self._closed.isSet():
-                return
-            try:
-                request = self._request_queue.get(timeout=1)
-            except queue.Empty as e:
-                continue
-            if request is None: # None in the queue is a signal to quit
+            request = self._request_queue.get()
+            if request == self._stop_sending_metrics_sentinel:
                 self._request_queue.task_done()
                 return
             self._get_open_socket().sendall(request)
             self._request_queue.task_done()
 
-    def close(self):
-        if self._closed.isSet():
-            return
-        # signal the thread to quit
-        self._request_queue.put(None)
-        self._request_queue.join()
-        self._closed.set()
-
     def __del__(self):
-        if self._request_queue:
-            self.close()
+        # signal the thread to quit
+        self._request_queue.put(self._stop_sending_metrics_sentinel)
 
 
 class TCPClient(ThreadedTCPClientMixIn, DefaultTCPClient):
@@ -69,9 +53,6 @@ class TCPClient(ThreadedTCPClientMixIn, DefaultTCPClient):
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
         DefaultTCPClient.__init__(self, host, port, prefix)
         ThreadedTCPClientMixIn.__init__(self)
-
-    def _request(self, data):
-        self._request_queue.put("{}\n".format(data).encode())
 
     def __del__(self):
         ThreadedTCPClientMixIn.__del__(self)
