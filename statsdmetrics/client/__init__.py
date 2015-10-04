@@ -42,11 +42,6 @@ class AutoClosingSharedSocket(object):
 
         if self._closed:
             return
-
-        try:
-            self._socket.shutdown(socket.SHUT_RDWR)
-        except OSError:
-            pass
         self._socket.close()
         self._closed = True
 
@@ -75,8 +70,7 @@ class AutoClosingSharedSocket(object):
             self.close()
 
     def __del__(self):
-        if self._socket:
-            self._socket.close()
+        self.close()
 
     def __getattr__(self, name):
         return getattr(self._socket, name)
