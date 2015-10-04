@@ -19,11 +19,11 @@ in the :mod:`client` module.
 
     .. data:: host
 
-        the host name (or IP address) of Statsd server
+        the host name (or IP address) of Statsd server. This property is **readonly**.
 
     .. data:: port
 
-        the port number of Statsd server
+        the port number of Statsd server. This property is **readonly**.
 
     .. data:: prefix
 
@@ -102,9 +102,6 @@ to send metrics.
 
     client = Client("stats.example.org")
     client.increment("login")
-    # settings can be updated later
-    client.host = "localhost"
-    client.port = 8126
     client.prefix = "other"
     client.gauge_delta("memory", -256)
     client.decrement(name="connections", 2)

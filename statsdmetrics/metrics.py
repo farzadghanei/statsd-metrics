@@ -4,6 +4,7 @@ statsdmetrics.metrics
 Define metric classes
 """
 
+from abc import ABCMeta, abstractmethod
 from re import compile, sub
 
 try:
@@ -80,6 +81,8 @@ def parse_metric_from_request(request):
 
 
 class AbstractMetric(object):
+    __metaclass__ = ABCMeta
+
     default_sample_rate = 1
 
     def __init__(self, name):
@@ -112,6 +115,10 @@ class AbstractMetric(object):
             'Metric sample rate should be positive: {}:{}'.format(
                 self.name, value)
         self._sample_rate = value
+
+    @abstractmethod
+    def to_request(self):
+        raise NotImplementedError()
 
 
 class Counter(AbstractMetric):

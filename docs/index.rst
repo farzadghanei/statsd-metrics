@@ -29,7 +29,7 @@ Available metrics:
 * :class:`~metrics.GaugeDelta`
 
 The :mod:`~metrics` module also provides helper functions to normalize metric names, and a parse a Statsd request
-and return the correspodning metric object. This could be used on the server side to parse the received requests.
+and return the corresponding metric object. This could be used on the server side to parse the received requests.
 
 Clients
 -------

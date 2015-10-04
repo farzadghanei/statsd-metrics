@@ -50,14 +50,11 @@ Send Statsd requests
 
     client = Client("stats.example.org")
     client.increment("login")
-    client.timing("db.search.username", 3500)
-    client.set("unique.ip_address", "10.10.10.1")
-    client.gauge("memory", 20480)
-    # settings can be updated later
-    client.host = "localhost"
-    client.port = 8126
-    client.gauge_delta("memory", -256)
     client.decrement(name="connections", 2)
+    client.timing("db.search.username", 3500)
+    client.gauge("memory", 20480)
+    client.gauge_delta("memory", -256)
+    client.set("unique.ip_address", "10.10.10.1")
 
 
 Sending multiple metrics in batch requests is supported through ``BatchClient`` class, either
