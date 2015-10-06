@@ -134,6 +134,14 @@ You can always use the setup.py file
 
     python setup.py test
 
+Integration tests are available, bringing up dummy servers (but actually listening on
+network socket) to capture requests instead of processing them. Then send some metrics and
+assert if the captured requests match the expected.
+
+.. code-block:: bash
+
+    python tests/integration_test_upd.py
+
 
 License
 -------

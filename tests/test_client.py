@@ -11,6 +11,7 @@ try:
     import unittest.mock as mock
 except ImportError:
     import mock
+import threading
 
 from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
 from . import MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
@@ -40,6 +41,45 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
         sock.add_client(client)
         self.assertFalse(sock.closed)
         sock.remove_client(client)
+        self.assertTrue(sock.closed)
+        self.assertEqual(self.mock_close.call_count, 1)
+
+    def test_close_on_no_more_client_multithreaded(self):
+        sock = AutoClosingSharedSocket(self.mock_socket)
+        self.assertFalse(sock.closed)
+
+        client1 = Client("localhost")
+        sock.add_client(client1)
+
+        client2 = Client("localhost")
+        sock.add_client(client2)
+
+        client3 = Client("localhost")
+        sock.add_client(client3)
+
+        self.assertFalse(sock.closed)
+
+        start_remove = threading.Event()
+
+        def _remove_client(client):
+            start_remove.wait()
+            self.assertFalse(sock.closed)
+            sock.remove_client(client)
+
+        th1 = threading.Thread(target=_remove_client, args=[client1])
+        th2 = threading.Thread(target=_remove_client, args=[client2])
+        th3 = threading.Thread(target=_remove_client, args=[client3])
+
+        th1.start()
+        th2.start()
+        th3.start()
+
+        start_remove.set()
+
+        th1.join()
+        th2.join()
+        th3.join()
+
         self.assertTrue(sock.closed)
         self.assertEqual(self.mock_close.call_count, 1)
 
