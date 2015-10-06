@@ -13,17 +13,14 @@ from . import (AutoClosingSharedSocket, AbstractClient,
 class TCPClientMixIn(object):
     """Mix-In class to send metrics over TCP"""
 
-    def _get_open_socket(self):
-        if self._socket is None:
-            self._socket = AutoClosingSharedSocket(
-                    socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                )
-            self._socket.add_client(self)
-            self._socket.connect(self.remote_address)
-        return self._socket
+    def _create_socket(self):
+        sock = AutoClosingSharedSocket(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+        sock.add_client(self)
+        sock.connect(self.remote_address)
+        return sock
 
     def _request(self, data):
-        self._get_open_socket().sendall("{}\n".format(data).encode())
+        self._socket.sendall("{}\n".format(data).encode())
 
 
 class TCPClient(TCPClientMixIn, AbstractClient):
@@ -59,10 +56,9 @@ class TCPBatchClient(BatchClientMixIn, TCPClientMixIn, AbstractClient):
     def flush(self):
         """Send buffered metrics in batch requests over TCP"""
 
-        sock = self._get_open_socket()
         while len(self._batches) > 0:
-            sock.sendall(self._batches[0])
-            self._batches.pop(0)
+            self._socket.sendall(self._batches[0])
+            self._batches.popleft()
         return self
 
 
