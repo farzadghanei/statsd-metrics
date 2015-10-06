@@ -62,7 +62,7 @@ class TCPBatchClient(BatchClientMixIn, TCPClientMixIn, AbstractClient):
         sock = self._get_open_socket()
         while len(self._batches) > 0:
             sock.sendall(self._batches[0])
-            self._batches.pop(0)
+            self._batches.popleft()
         return self
 
 

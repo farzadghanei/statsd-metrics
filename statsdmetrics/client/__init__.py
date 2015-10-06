@@ -7,6 +7,7 @@ Statsd client to send metrics to server
 import socket
 from abc import ABCMeta
 from random import random
+from collections import deque
 
 from ..metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
                       normalize_metric_name, is_numeric)
@@ -27,7 +28,7 @@ class AutoClosingSharedSocket(object):
     def __init__(self, sock):
         self._closed = False
         self._socket = sock
-        self._clients = []
+        self._clients = deque()
 
     @property
     def closed(self):
@@ -66,7 +67,7 @@ class AutoClosingSharedSocket(object):
         except ValueError:
             pass
 
-        if not self._clients:
+        if len(self._clients) < 1:
             self.close()
 
     def __del__(self):
@@ -222,7 +223,7 @@ class BatchClientMixIn(object):
         batch_size = int(batch_size)
         assert batch_size > 0, "BatchClient batch size should be positive"
         self._batch_size = batch_size
-        self._batches = []
+        self._batches = deque()
 
     @property
     def batch_size(self):
@@ -231,7 +232,7 @@ class BatchClientMixIn(object):
     def clear(self):
         """Clear buffered metrics"""
 
-        self._batches = []
+        self._batches.clear()
         return self
 
     def flush(self):
@@ -241,7 +242,7 @@ class BatchClientMixIn(object):
         sock = self._get_open_socket()
         while len(self._batches) > 0:
             sock.sendto(self._batches[0], address)
-            self._batches.pop(0)
+            self._batches.popleft()
         return self
 
     def _request(self, data):
@@ -256,7 +257,7 @@ class BatchClientMixIn(object):
         data_size = data_size or batch_size
         if data_size > batch_size:
             self._batches.append(bytearray())
-        elif not self._batches or\
+        elif len(self._batches) < 1 or\
                         (len(self._batches[-1]) + data_size) >= batch_size:
             self._batches.append(bytearray())
 
