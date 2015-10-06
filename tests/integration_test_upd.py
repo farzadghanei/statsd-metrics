@@ -22,11 +22,6 @@ from unittest import TestCase, main
 from threading import Thread
 
 try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
-try:
     import SocketServer as socketserver
 except ImportError:
     import socketserver
