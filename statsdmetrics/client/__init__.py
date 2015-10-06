@@ -84,7 +84,7 @@ class AbstractClient(object):
         self._port = None
         self._host = None
         self._remote_address = None
-        self._socket = None
+        self._socket = self._create_socket()
         self._host = host
         self._set_port(port)
         self.prefix = prefix
@@ -193,22 +193,18 @@ class AbstractClient(object):
     def _should_send_metric(self, name, rate):
         return rate >= 1 or random() <= rate
 
-    def _get_open_socket(self):
-        if self._socket is None:
-            self._socket = AutoClosingSharedSocket(
-                    socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
-                )
-            self._socket.add_client(self)
-        return self._socket
+    def _create_socket(self):
+        sock = AutoClosingSharedSocket(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
+        sock.add_client(self)
+        return sock
 
     def _request(self, data):
-        self._get_open_socket().sendto(str(data).encode(), self.remote_address)
+        self._socket.sendto(str(data).encode(), self.remote_address)
 
     def _configure_client(self, other):
         other._remote_address = self._remote_address
-        sock = self._get_open_socket()
-        other._socket = sock
-        sock.add_client(other)
+        other._socket = self._socket
+        self._socket.add_client(other)
 
     def __del__(self):
         if self._socket:
@@ -239,9 +235,8 @@ class BatchClientMixIn(object):
         """Send buffered metrics in batch requests"""
 
         address = self.remote_address
-        sock = self._get_open_socket()
         while len(self._batches) > 0:
-            sock.sendto(self._batches[0], address)
+            self._socket.sendto(self._batches[0], address)
             self._batches.popleft()
         return self
 
