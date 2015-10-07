@@ -82,12 +82,12 @@ class AbstractClient(object):
 
     def __init__(self, host, port=DEFAULT_PORT, prefix=''):
         self._port = None
-        self._host = None
-        self._remote_address = None
-        self._socket = self._create_socket()
         self._host = host
-        self._set_port(port)
+        self._remote_address = None
+        self._socket = None
         self.prefix = prefix
+        self._set_port(port)
+        self._socket = self._create_socket()
 
     @property
     def port(self):
