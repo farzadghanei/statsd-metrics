@@ -30,6 +30,7 @@ except ImportError:
 sys.path.insert(0, dirname(dirname(__file__)))
 
 from statsdmetrics.client.tcp import TCPClient, TCPBatchClient
+from statsdmetrics.client.threaded import ThreadedTCPClient, ThreadedTCPBatchClient
 
 
 class TCPRequestHandler(socketserver.StreamRequestHandler):
@@ -55,14 +56,17 @@ class TCPClienstTest(TestCase):
         cls.server_thread.join(3)
 
     @classmethod
+    def signal_handler(cls, signal, stack_frame):
+        cls.shutdown_server()
+
+    @classmethod
     def setUpClass(cls):
         cls.server = DummyTCPStatsdServer(("localhost", 0))
         cls.port = cls.server.server_address[1]
         cls.server_thread = Thread(target=cls.server.serve_forever)
         cls.server_thread.daemon = True
         cls.server_thread.start()
-        signal.signal(signal.SIGTERM, cls.shutdown_server)
-        signal.signal(signal.SIGINT, cls.shutdown_server)
+        signal.signal(signal.SIGINT, cls.signal_handler)
 
     @classmethod
     def tearDownClass(cls):
@@ -70,6 +74,14 @@ class TCPClienstTest(TestCase):
 
     def setUp(self):
         self.__class__.server.requests.clear()
+
+    def assertServerReceivedExpectedRequests(self, expected):
+        timeout = 3
+        starttime = time()
+        server = self.__class__.server
+        while len(server.requests) < len(expected) and time() - starttime < timeout:
+            sleep(0.2)
+        self.assertEqual(expected, sorted(server.requests))
 
     def test_sending_metrics(self):
         client = TCPClient("localhost", self.__class__.port)
@@ -116,13 +128,51 @@ class TCPClienstTest(TestCase):
 
         self.assertServerReceivedExpectedRequests(expected)
 
-    def assertServerReceivedExpectedRequests(self, expected):
-        timeout = 3
-        starttime = time()
-        server = self.__class__.server
-        while len(server.requests) < len(expected) and time() - starttime < timeout:
-            sleep(0.2)
-        self.assertEqual(expected, sorted(server.requests))
+    def test_threaded_tcp_client(self):
+        client = ThreadedTCPClient("localhost", self.__class__.port)
+        client.increment("1.test", 8)
+        client.increment("2.login")
+        client.timing("3.query", 9600)
+        client.gauge("4.memory", 102600)
+        client.gauge_delta("5.memory", 2560)
+        client.gauge_delta("6.memory", -1280)
+        client.set("7.ip", "127.0.0.2")
+
+        expected = [
+                "1.test:8|c",
+                "2.login:1|c",
+                "3.query:9600|ms",
+                "4.memory:102600|g",
+                "5.memory:+2560|g",
+                "6.memory:-1280|g",
+                "7.ip:127.0.0.2|s",
+        ]
+
+        self.assertServerReceivedExpectedRequests(expected)
+        client.close()
+
+    def test_threaded_tcp_batch_client(self):
+        client = ThreadedTCPBatchClient("localhost", self.__class__.port)
+        client.increment("1.test", 8)
+        client.increment("2.login")
+        client.timing("3.query", 9600)
+        client.gauge("4.memory", 102600)
+        client.gauge_delta("5.memory", 2560)
+        client.gauge_delta("6.memory", -1280)
+        client.set("7.ip", "127.0.0.2")
+
+        expected = [
+                "1.test:8|c",
+                "2.login:1|c",
+                "3.query:9600|ms",
+                "4.memory:102600|g",
+                "5.memory:+2560|g",
+                "6.memory:-1280|g",
+                "7.ip:127.0.0.2|s",
+        ]
+
+        self.assertServerReceivedExpectedRequests(expected)
+        client.close()
 
 if __name__ == '__main__':
     main()
