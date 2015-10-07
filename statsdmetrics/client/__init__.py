@@ -293,5 +293,11 @@ class BatchClient(BatchClientMixIn, AbstractClient):
         AbstractClient.__init__(self, host, port, prefix)
         BatchClientMixIn.__init__(self, batch_size)
 
+    def unit_client(self):
+        """Return a client with same settings of the batch client"""
+
+        client = Client(self.host, self.port, self.prefix)
+        self._configure_client(client)
+        return client
 
 __all__ = (Client, BatchClient)
