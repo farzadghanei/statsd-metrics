@@ -132,6 +132,11 @@ Examples
 
         Send the buffered metrics in batch requests.
 
+    .. method:: unit_client()
+
+        Create a :class:`~Client` object, using the same configurations of current batch client
+        to send the metrics on each request. The client uses the same resources as the batch client.
+
 
 .. code-block:: python
 
