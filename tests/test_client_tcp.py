@@ -285,5 +285,29 @@ class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         client.flush()
         self.assertEqual(self.mock_sendall.call_count, 0)
 
+    def test_create_unit_client(self):
+        batch_client = TCPBatchClient("localhost")
+        batch_client._socket = self.mock_socket
+        client = batch_client.unit_client()
+        self.assertIsInstance(client, TCPClient)
+        self.assertEqual(batch_client.host, client.host)
+        self.assertEqual(batch_client.port, client.port)
+        self.assertEqual(
+            batch_client._remote_address,
+            client._remote_address
+        )
+        self.assertEqual(
+            batch_client._socket,
+            client._socket
+        )
+
+    def test_when_client_is_removed_the_socket_batch_client_socket_is_not_closed(self):
+        batch_client = TCPBatchClient("localhost")
+        unit_client = batch_client.unit_client()
+        sock = batch_client._socket
+        del batch_client
+        gc.collect()
+        self.assertFalse(sock.closed)
+
 if __name__ == "__main__":
     unittest.main()
