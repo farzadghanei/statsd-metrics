@@ -13,7 +13,7 @@ from .metrics import (Counter, Timer, Gauge,
                       parse_metric_from_request,
                     )
 
-__version__ = '0.2.1'
+__version__ = '0.3.0'
 
 __all__ = (Counter, Timer, Gauge,
            Set, GaugeDelta,
