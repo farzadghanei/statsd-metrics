@@ -50,7 +50,7 @@ class DummyTCPStatsdServer(socketserver.ThreadingTCPServer):
 class TCPClienstTest(TestCase):
 
     @classmethod
-    def shutdown_server(cls):
+    def shutdown_server(cls, *args):
         cls.server.shutdown()
         cls.server_thread.join(3)
 
