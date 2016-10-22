@@ -16,7 +16,7 @@ script:
     - "python setup.py test"
     - "python tests/integration_test_udp.py"
     - "pypy --version || python tests/integration_test_tcp.py"
-    - "python setup.py bdist_wheel"
+    - "python setup.py bdist_wheel -d dist"
 
 after_success:
     - "pip install dist/*.whl"
