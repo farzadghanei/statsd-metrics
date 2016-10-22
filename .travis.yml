@@ -15,7 +15,7 @@ install:
 script:
     - "python setup.py test"
     - "python tests/integration_test_udp.py"
-    - "pypy -h || python tests/integration_test_tcp.py"
+    - "pypy --version || python tests/integration_test_tcp.py"
     - "python setup.py bdist_wheel"
 
 after_success:
