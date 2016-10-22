@@ -17,6 +17,15 @@ build: off
 
 test_script:
   - "%PYTHON%\\python.exe setup.py test"
+  - "%PYTHON%\\python.exe tests/integration_test_udp.py"
+  - "%PYTHON%\\python.exe tests/integration_test_tcp.py"
 
 after_test:
   - "%PYTHON%\\python.exe setup.py bdist_wheel"
+  - "%PYTHON%\\python.exe -m pip install dist/*.whl"
+  - "%PYTHON%\\python.exe -c 'import statsdmetrics'"
+  - "%PYTHON%\\python.exe -c 'import statsdmetrics.client'"
+  - "%PYTHON%\\python.exe -c 'import statsdmetrics.client.tcp'"
+
+artifacts:
+  - path: dist\*

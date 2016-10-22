@@ -14,11 +14,15 @@ install:
 
 script:
     - "python setup.py test"
+    - "python tests/integration_test_udp.py"
+    - "python tests/integration_test_tcp.py"
     - "python setup.py bdist_wheel"
 
 after_success:
     - "pip install dist/*.whl"
     - "python -c 'import statsdmetrics'"
+    - "python -c 'import statsdmetrics.client'"
+    - "python -c 'import statsdmetrics.client.tcp'"
 
 notifications:
       email: false
