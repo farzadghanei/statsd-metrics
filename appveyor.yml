@@ -22,10 +22,10 @@ test_script:
 
 after_test:
   - "%PYTHON%\\python.exe setup.py bdist_wheel"
-  - "%PYTHON%\\python.exe -m pip install dist\*.whl"
+  - "%PYTHON%\\python.exe -m pip install dist\\*.whl"
   - "%PYTHON%\\python.exe -c 'import statsdmetrics'"
-  - "%PYTHON%\\python.exe -c 'import statsdmetrics.client'"
-  - "%PYTHON%\\python.exe -c 'import statsdmetrics.client.tcp'"
+  - "%PYTHON%\\python.exe -c 'from statsdmetrics.client import Client'"
+  - "%PYTHON%\\python.exe -c 'from import statsdmetrics.client.tcp import TCPClient'"
 
 artifacts:
   - path: dist\*

@@ -21,8 +21,8 @@ script:
 after_success:
     - "pip install dist/*.whl"
     - "python -c 'import statsdmetrics'"
-    - "python -c 'import statsdmetrics.client'"
-    - "python -c 'import statsdmetrics.client.tcp'"
+    - "python -c 'from statsdmetrics.client import Client'"
+    - "python -c 'from statsdmetrics.client.tcp import TCPClient'"
 
 notifications:
       email: false

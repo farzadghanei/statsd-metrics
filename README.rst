@@ -146,7 +146,7 @@ assert if the captured requests match the expected.
 
 .. code-block:: bash
 
-    python tests/integration_test_upd.py
+    python tests/integration_test_udp.py
     python tests/integration_test_tcp.py
 
 
