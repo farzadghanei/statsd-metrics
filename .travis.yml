@@ -7,9 +7,18 @@ python:
   - "3.2"
   - "2.7"
   - "pypy"
+
 install:
+    - "pip install wheel"
     - "pip install -r requirements-dev.txt"
+
 script:
     - "python setup.py test"
+    - "python setup.py bdist_wheel"
+
+after_success:
+    - "pip install dist/*.whl"
+    - "python -c 'import statsdmetrics'"
+
 notifications:
       email: false
