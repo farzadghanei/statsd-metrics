@@ -4,7 +4,6 @@ tests
 statsdmetrics unit tests
 """
 
-import unittest
 try:
     import unittest.mock as mock
 except ImportError:
@@ -13,7 +12,7 @@ except ImportError:
 from statsdmetrics.client import Client, DEFAULT_PORT
 
 
-class MockMixIn():
+class MockMixIn(object):
     """Base test case to patch socket module for tests"""
 
     def doMock(self):

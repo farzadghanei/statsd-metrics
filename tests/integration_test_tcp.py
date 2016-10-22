@@ -26,8 +26,9 @@ try:
 except ImportError:
     import socketserver
 
-
-sys.path.insert(0, dirname(dirname(__file__)))
+project_dir = dirname(dirname(__file__))
+if project_dir not in sys.path:
+    sys.path.insert(0, project_dir)
 
 from statsdmetrics.client.tcp import TCPClient, TCPBatchClient
 
@@ -52,16 +53,14 @@ class TCPClienstTest(TestCase):
     @classmethod
     def shutdown_server(cls, *args):
         cls.server.shutdown()
-        cls.server_thread.join(3)
 
     @classmethod
     def setUpClass(cls):
         cls.server = DummyTCPStatsdServer(("localhost", 0))
         cls.port = cls.server.server_address[1]
         cls.server_thread = Thread(target=cls.server.serve_forever)
-        cls.server_thread.daemon = True
+        cls.server_thread.setDaemon(True)
         cls.server_thread.start()
-        signal.signal(signal.SIGTERM, cls.shutdown_server)
         signal.signal(signal.SIGINT, cls.shutdown_server)
 
     @classmethod
@@ -118,11 +117,12 @@ class TCPClienstTest(TestCase):
 
     def assertServerReceivedExpectedRequests(self, expected):
         timeout = 3
-        starttime = time()
+        start_time = time()
         server = self.__class__.server
-        while len(server.requests) < len(expected) and time() - starttime < timeout:
+        while len(server.requests) < len(expected) and time() - start_time < timeout:
             sleep(0.2)
         self.assertEqual(expected, sorted(server.requests))
+
 
 if __name__ == '__main__':
     main()
