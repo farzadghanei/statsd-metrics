@@ -8,17 +8,22 @@ python:
   - "2.7"
   - "pypy"
 
+before_install:
+  - pip install coverage
+  - pip install codecov
+
 install:
     - "pip install wheel"
     - "pip install -r requirements-dev.txt"
 
 script:
-    - "python setup.py test"
+    - "python run-test-coverage.py"
     - "python tests/integration_test_udp.py"
-    - "pypy --version || python tests/integration_test_tcp.py"
+    - "python -c 'import sys; sys.exit(int(sys.subversion[0].lower() != \'pypy\'))' || python tests/integration_test_tcp.py"
     - "python setup.py bdist_wheel -d dist"
 
 after_success:
+    - codecov
     - "pip install dist/*.whl"
     - "python -c 'import statsdmetrics'"
     - "python -c 'from statsdmetrics.client import Client'"
