@@ -19,7 +19,7 @@ install:
 script:
     - "python run-test-coverage.py"
     - "python tests/integration_test_udp.py"
-    - "python -c 'import sys; sys.exit(int(sys.subversion[0].lower() != \'pypy\'))' || python tests/integration_test_tcp.py"
+    - "python -c 'import sys; from platform import python_implementation as pi; sys.exit(int(pi().lower() != \'pypy\'))' || python tests/integration_test_tcp.py"
     - "python setup.py bdist_wheel -d dist"
 
 after_success:
