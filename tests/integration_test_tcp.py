@@ -20,6 +20,7 @@ from collections import deque
 from os.path import dirname
 from unittest import TestCase, main
 from threading import Thread
+from multiprocessing import Process, Pipe
 
 try:
     import SocketServer as socketserver
@@ -31,6 +32,11 @@ if project_dir not in sys.path:
     sys.path.insert(0, project_dir)
 
 from statsdmetrics.client.tcp import TCPClient, TCPBatchClient
+
+
+PROC_CMD_SHUTDOWN = '<shutdown>'
+PROC_CMD_FLUSH = '<flush>'
+PROC_CMD_COUNT = '<count>'
 
 
 class TCPRequestHandler(socketserver.StreamRequestHandler):
@@ -48,27 +54,48 @@ class DummyTCPStatsdServer(socketserver.ThreadingTCPServer):
         socketserver.ThreadingTCPServer.__init__(self, address, request_handler, bind_and_activate)
 
 
+def start_dummy_tcp_server(pipe):
+    server = DummyTCPStatsdServer(("localhost", 0))
+    port = server.server_address[1]
+    pipe.send(port)
+    server_thread = Thread(target=server.serve_forever)
+    server_thread.start()
+    while True:
+        command = pipe.recv()
+        if command == PROC_CMD_SHUTDOWN:
+            break
+        elif command == PROC_CMD_COUNT:
+            pipe.send(len(server.requests))
+        elif command == PROC_CMD_FLUSH:
+            pipe.send(server.requests)
+            server.requests.clear()
+    server.shutdown()
+    server.server_close()
+    server_thread.join()
+    if server.socket:
+        server.socket.close()
+
+
+
 class TCPClienstTest(TestCase):
 
     @classmethod
     def shutdown_server(cls, *args):
-        cls.server.shutdown()
+        cls.control_pipe.send(PROC_CMD_SHUTDOWN)
+        cls.server_proc.join()
 
     @classmethod
     def setUpClass(cls):
-        cls.server = DummyTCPStatsdServer(("localhost", 0))
-        cls.port = cls.server.server_address[1]
-        cls.server_thread = Thread(target=cls.server.serve_forever)
-        cls.server_thread.setDaemon(True)
-        cls.server_thread.start()
+        control_pipe, server_pipe = Pipe()
+        cls.server_proc = Process(target=start_dummy_tcp_server, args=(server_pipe,))
+        cls.control_pipe = control_pipe
         signal.signal(signal.SIGINT, cls.shutdown_server)
+        cls.server_proc.start()
+        cls.port = cls.control_pipe.recv()
 
     @classmethod
     def tearDownClass(cls):
         cls.shutdown_server()
-
-    def setUp(self):
-        self.__class__.server.requests.clear()
 
     def test_sending_metrics(self):
         client = TCPClient("localhost", self.__class__.port)
@@ -118,10 +145,20 @@ class TCPClienstTest(TestCase):
     def assertServerReceivedExpectedRequests(self, expected):
         timeout = 3
         start_time = time()
-        server = self.__class__.server
-        while len(server.requests) < len(expected) and time() - start_time < timeout:
-            sleep(0.2)
-        self.assertEqual(expected, sorted(server.requests))
+        server_pipe = self.__class__.control_pipe
+        requests = []
+        while time() - start_time < timeout:
+            sleep(0.5)
+            server_pipe.send(PROC_CMD_COUNT)
+            count = server_pipe.recv()
+            if count:
+                server_pipe.send(PROC_CMD_FLUSH)
+                server_requests = server_pipe.recv()
+                if server_requests:
+                    requests.extend(server_requests)
+            if len(requests) >= len(expected):
+                break
+        self.assertEqual(sorted(expected), sorted(requests))
 
 
 if __name__ == '__main__':
