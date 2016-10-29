@@ -10,7 +10,7 @@ try:
     from typing import Any, Dict, Tuple, Union
     TypeMetric = Union['AbstractMetric', 'Counter', 'Timer', 'Gauge', 'GaugeDelta', 'Set']
 except ImportError:
-    Any, Dict, Tuple, Union = None, None, None, None, None  # type: ignore
+    Any, Dict, Tuple, Union = None, None, None, None  # type: ignore
     TypeMetric = None
 
 
