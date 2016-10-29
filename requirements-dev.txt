@@ -1,3 +1,4 @@
 setuptools
 mock
 distutilazy>=0.3.2
+typing
