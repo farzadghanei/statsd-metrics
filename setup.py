@@ -20,10 +20,15 @@ except ImportError:
     from distutils.core import setup
 
 try:
-    import distutilazy.test
-    import distutilazy.clean
+    from typing import Dict, Any
 except ImportError:
-    distutilazy = None
+    Dict, Any = None, None  # type: ignore
+
+try:
+    import distutilazy.test  # type: ignore
+    import distutilazy.clean  # type: ignore
+except ImportError:
+    distutilazy = None  # type: ignore
 
 from statsdmetrics import __version__
 
@@ -52,17 +57,17 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as fh:
     long_description = fh.read()
 
 setup_params = dict(
-    name = "statsdmetrics",
-    packages = ["statsdmetrics", "statsdmetrics.client"],
-    version = __version__,
-    description = "Metric classes for Statsd",
-    long_description = long_description,
-    author = "Farzad Ghanei",
-    author_email = "farzad.ghanei@gmail.com",
-    url = "https://github.com/farzadghanei/statsd-metrics",
-    license = "MIT",
-    classifiers = classifiers,
-)
+    name="statsdmetrics",
+    packages=["statsdmetrics", "statsdmetrics.client"],
+    version=__version__,
+    description="Metric classes for Statsd",
+    long_description=long_description,
+    author="Farzad Ghanei",
+    author_email="farzad.ghanei@gmail.com",
+    url="https://github.com/farzadghanei/statsd-metrics",
+    license="MIT",
+    classifiers=classifiers,
+)  # type: Dict[str, Any]
 
 if setuptools:
     dev_dependencies_filename = os.path.join(
