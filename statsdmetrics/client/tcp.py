@@ -69,4 +69,4 @@ class TCPBatchClient(BatchClientMixIn, TCPClientMixIn, AbstractClient):
         return client
 
 
-__all__ = (TCPClient, TCPBatchClient)
+__all__ = ['TCPClient', 'TCPBatchClient']

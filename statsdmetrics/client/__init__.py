@@ -300,4 +300,4 @@ class BatchClient(BatchClientMixIn, AbstractClient):
         self._configure_client(client)
         return client
 
-__all__ = (Client, BatchClient)
+__all__ = ['Client', 'BatchClient']

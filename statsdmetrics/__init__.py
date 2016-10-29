@@ -11,12 +11,11 @@ from .metrics import (Counter, Timer, Gauge,
                       Set, GaugeDelta,
                       normalize_metric_name,
                       parse_metric_from_request,
-                    )
+                      )
 
 __version__ = '0.3.0'
 
-__all__ = (Counter, Timer, Gauge,
-           Set, GaugeDelta,
-           normalize_metric_name,
-           parse_metric_from_request,
-            )
+__all__ = ['Counter', 'Timer', 'Gauge',
+           'Set', 'GaugeDelta',
+           'normalize_metric_name',
+           'parse_metric_from_request']
