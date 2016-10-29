@@ -1,0 +1,4 @@
+include LICENSE
+recursive-include tests *
+include requirements-dev.txt
+include README.rst
