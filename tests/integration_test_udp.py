@@ -22,9 +22,9 @@ from unittest import TestCase, main
 from threading import Thread
 
 try:
-    import SocketServer as socketserver
-except ImportError:
     import socketserver
+except ImportError:
+    import SocketServer as socketserver  # type: ignore
 
 
 sys.path.insert(0, dirname(dirname(__file__)))

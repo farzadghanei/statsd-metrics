@@ -23,9 +23,9 @@ from threading import Thread
 from multiprocessing import Process, Pipe
 
 try:
-    import SocketServer as socketserver
-except ImportError:
     import socketserver
+except ImportError:
+    import SocketServer as socketserver  # type: ignore
 
 project_dir = dirname(dirname(__file__))
 if project_dir not in sys.path:
