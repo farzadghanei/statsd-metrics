@@ -1,4 +1,4 @@
-setuptools
+-r requirements.txt
 mock
 distutilazy>=0.4.2
 typing

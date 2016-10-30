@@ -4,20 +4,13 @@
 statsdmetrics
 --------------
 
-Data metrics for Statsd.
-
+Statsd metrics and clients
 """
 from __future__ import print_function
 
 import os
 from os.path import dirname
-
-try:
-    import setuptools
-    from setuptools import setup
-except ImportError:
-    setuptools = None
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 try:
     from typing import Dict, Any
@@ -58,9 +51,9 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as fh:
 
 setup_params = dict(
     name="statsdmetrics",
-    packages=["statsdmetrics", "statsdmetrics.client"],
+    packages=find_packages(),
     version=__version__,
-    description="Metric classes for Statsd",
+    description="Statsd metrics classes and clients",
     long_description=long_description,
     author="Farzad Ghanei",
     author_email="farzad.ghanei@gmail.com",
@@ -69,19 +62,14 @@ setup_params = dict(
     classifiers=classifiers,
 )  # type: Dict[str, Any]
 
-if setuptools:
-    dev_dependencies_filename = os.path.join(
-        dirname(__file__),
-        "requirements-dev.txt"
-    )
-    if os.path.exists(dev_dependencies_filename):
-        with open(dev_dependencies_filename) as fh:
-            setup_params["extras_require"] = {
-                "dev": [item.strip() for item in fh.readlines()]
-            }
-    setup_params["keywords"] = "statsd metrics"
-    setup_params["test_suite"] = "tests"
-    setup_params["zip_safe"] = True
+
+
+setup_params["extras_require"] = {
+    "dev": ["distutilazy>=0.4.2", "mock", "typing"]
+}
+setup_params["keywords"] = "statsd metrics"
+setup_params["test_suite"] = "tests"
+setup_params["zip_safe"] = True
 
 if distutilazy:
     setup_params["cmdclass"] = dict(

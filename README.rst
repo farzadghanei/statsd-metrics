@@ -11,12 +11,10 @@ Statsd Metrics
 .. image:: https://ci.appveyor.com/api/projects/status/bekwcg8n1xe0w0n9/branch/master?svg=true
     :target: https://ci.appveyor.com/project/farzadghanei/statsd-metrics?branch=master
 
-Metric classes for Statsd and and functionality to create, parse and send
-Statsd requests (each metric in a single request, or send batch requests).
+Metric classes for Statsd, and Statsd clients (each metric in a single request, or send batch requests).
 
 Metric Classes
 --------------
-Available metrics:
 
 * Counter
 * Timer
@@ -46,8 +44,8 @@ Parse metrics from a Statsd request
     mem_usage = parse_metric_from_request('resource.memory:2048|g')
     # mem_usage is a Gauge object with value = 2028
 
-Statsd Client
--------------
+Statsd Clients
+--------------
 * ``client.Client``: Default client, sends request on each call using UDP
 * ``client.BatchClient``: Buffers metrics and flushes them in batch requests using UDP
 * ``client.tcp.TCPClient``: Sends request on each call using TCP
@@ -68,7 +66,7 @@ Send Statsd requests
     client.set("unique.ip_address", "10.10.10.1")
 
 
-Sending multiple metrics in batch requests is supported through ``BatchClient`` class, either
+Sending multiple metrics in batch requests by ``BatchClient``, either
 by using an available client as the context manager:
 
 
@@ -105,13 +103,13 @@ Installation
     pip install statsdmetrics
 
 
-There are no specific dependencies, it runs on Python 2.7+ (CPython 2.7, 3.2, 3.3
-3.4 and 3.5, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
+The only dependencies are Python 2.7+ and setuptools.
+CPython 2.7, 3.2, 3.3, 3.4, 3.5, 3.6-dev, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
 
 However on development (and test) environment
-`mock <https://pypi.python.org/pypi/mock>`__ is required, and
-`distutilazy <https://pypi.python.org/pypi/distutilazy>`_
-(or setuptools as a fallback) is used to run the tests.
+`mock <https://pypi.python.org/pypi/mock>`_ is required,
+`typing <https://pypi.python.org/pypi/typing>`_ and
+`distutilazy <https://pypi.python.org/pypi/distutilazy>`_ are recommended.
 
 .. code-block:: bash
 
