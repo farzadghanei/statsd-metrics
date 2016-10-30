@@ -1,4 +1,4 @@
 setuptools
 mock
-distutilazy>=0.3.2
+distutilazy>=0.4.2
 typing
