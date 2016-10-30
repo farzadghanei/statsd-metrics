@@ -259,6 +259,23 @@ class TestCounter(unittest.TestCase):
         counter3 = Counter('again', -2, 0.7)
         self.assertEqual(counter3.to_request(), 'again:-2|c|@0.7')
 
+    def test_equality_check(self):
+        counter = Counter('counter1')
+        with self.assertRaises(AssertionError):
+            counter != 'I am not a Counter'
+
+        different_name = Counter('counter2')
+        self.assertTrue(counter != different_name)
+
+        different_count = Counter('counter1', 10)
+        self.assertTrue(counter != different_count)
+
+        different_rate = Counter('counter1', 1, 0.5)
+        self.assertTrue(counter != different_rate)
+
+        same = Counter('counter1')
+        self.assertTrue(same == counter)
+
 
 class TestTimer(unittest.TestCase):
     def test_constructor(self):
@@ -309,6 +326,23 @@ class TestTimer(unittest.TestCase):
 
         timer3 = Timer('again', 12.3, 0.8)
         self.assertEqual(timer3.to_request(), 'again:12.3|ms|@0.8')
+
+    def test_equality_check(self):
+        timer = Timer('timer1', 10)
+        with self.assertRaises(AssertionError):
+            timer != 'I am not a Timer'
+
+        different_name = Timer('timer2', 10)
+        self.assertTrue(timer != different_name)
+
+        different_time = Timer('timer1', 25)
+        self.assertTrue(timer != different_time)
+
+        different_rate = Timer('timer1', 10, 0.5)
+        self.assertTrue(timer != different_rate)
+
+        same = Timer('timer1', 10)
+        self.assertTrue(same == timer)
 
 
 class TestGauge(unittest.TestCase):
@@ -371,6 +405,23 @@ class TestGauge(unittest.TestCase):
         gauge3 = Gauge('again', 11.8, 0.4)
         self.assertEqual(gauge3.to_request(), 'again:11.8|g|@0.4')
 
+    def test_equality_check(self):
+        gauge = Gauge('cpu', 10)
+        with self.assertRaises(AssertionError):
+            gauge != 'I am not a Gauge'
+
+        different_name = Gauge('memory', 10)
+        self.assertTrue(gauge != different_name)
+
+        different_value = Gauge('cpu', 25)
+        self.assertTrue(gauge != different_value)
+
+        different_rate = Gauge('cpu', 10, 0.5)
+        self.assertTrue(gauge != different_rate)
+
+        same = Gauge('cpu', 10)
+        self.assertTrue(same == gauge)
+
 
 class TestSet(unittest.TestCase):
     def test_constructor(self):
@@ -389,6 +440,23 @@ class TestSet(unittest.TestCase):
         self.assertEqual(set_.value, 2.0)
         set_.value = 'something hashable'
         self.assertEqual(set_.value, 'something hashable')
+
+    def test_equality_check(self):
+        metric = Set('uid', 5)
+        with self.assertRaises(AssertionError):
+            metric != 'I am not a Set'
+
+        different_name = Set('userid', 5)
+        self.assertTrue(metric != different_name)
+
+        different_value = Set('uid', 25)
+        self.assertTrue(metric != different_value)
+
+        different_rate = Set('uid', 10, 0.5)
+        self.assertTrue(metric != different_rate)
+
+        same = Set('uid', 5)
+        self.assertTrue(same == metric)
 
 
 class TestGaugeDelta(unittest.TestCase):
@@ -415,6 +483,22 @@ class TestGaugeDelta(unittest.TestCase):
         gauge_delta3 = GaugeDelta('again', 15, 0.4)
         self.assertEqual(gauge_delta3.to_request(), 'again:+15|g|@0.4')
 
+    def test_equality_check(self):
+        metric = GaugeDelta('cpu', 5)
+        with self.assertRaises(AssertionError):
+            metric != 'I am not a GaugeDelta'
+
+        different_name = GaugeDelta('memory', 5)
+        self.assertTrue(metric != different_name)
+
+        different_value = GaugeDelta('cpu', 25)
+        self.assertTrue(metric != different_value)
+
+        different_rate = GaugeDelta('cpu', 5, 0.5)
+        self.assertTrue(metric != different_rate)
+
+        same = GaugeDelta('cpu', 5)
+        self.assertTrue(same == metric)
 
 if __name__ == '__main__':
     unittest.main()

@@ -123,7 +123,7 @@ class AbstractMetric(object):
 
     @abstractmethod
     def to_request(self):  # type: () -> bytes
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 class Counter(AbstractMetric):
