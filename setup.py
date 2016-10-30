@@ -60,16 +60,12 @@ setup_params = dict(
     url="https://github.com/farzadghanei/statsd-metrics",
     license="MIT",
     classifiers=classifiers,
+    keywords="statsd metrics client",
+    test_suite="tests",
+    zip_safe=True
 )  # type: Dict[str, Any]
 
-
-
-setup_params["extras_require"] = {
-    "dev": ["distutilazy>=0.4.2", "mock", "typing"]
-}
-setup_params["keywords"] = "statsd metrics"
-setup_params["test_suite"] = "tests"
-setup_params["zip_safe"] = True
+setup_params["extras_require"] = {"dev": ["distutilazy>=0.4.2", "mock", "typing"]}
 
 if distutilazy:
     setup_params["cmdclass"] = dict(
