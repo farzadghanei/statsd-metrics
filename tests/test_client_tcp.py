@@ -143,9 +143,10 @@ class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         client._socket = self.mock_socket
         client.increment("event", 2, 0.5)
         client.flush()
-        self.mock_sendall.assert_called_with(
+        self.mock_sendall.assert_called_once_with(
             bytearray("event:2|c|@0.5\n".encode()),
         )
+
         self.mock_sendall.reset_mock()
         client.prefix = "pre."
         client.increment("login")

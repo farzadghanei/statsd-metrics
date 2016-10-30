@@ -263,12 +263,7 @@ class BatchClientMixIn(object):
     def flush(self):
         # type: () -> BatchClientMixIn
         """Send buffered metrics in batch requests"""
-
-        address = self.remote_address
-        while len(self._batches) > 0:
-            self._socket.sendto(self._batches[0], address)
-            self._batches.popleft()
-        return self
+        raise NotImplementedError("flush should be implemented in the client class")
 
     def _request(self, data):
         # type: (str) -> None
