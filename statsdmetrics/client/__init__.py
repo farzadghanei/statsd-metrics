@@ -15,8 +15,7 @@ except ImportError:
     Tuple = None
 
 from ..metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
-                      normalize_metric_name, is_numeric)
-
+                       normalize_metric_name, is_numeric)
 
 DEFAULT_PORT = 8125
 
@@ -279,7 +278,7 @@ class BatchClientMixIn(object):
         data_size = data_size or batch_size
         if data_size > batch_size:
             self._batches.append(bytearray())
-        elif len(self._batches) < 1 or\
+        elif len(self._batches) < 1 or \
                         (len(self._batches[-1]) + data_size) >= batch_size:
             self._batches.append(bytearray())
 
