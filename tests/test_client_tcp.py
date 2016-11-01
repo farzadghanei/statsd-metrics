@@ -54,20 +54,20 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         )
         client.timing("db.event name", 34.5, 0.5)
         self.mock_sendall.assert_called_with(
-            "db.event_name:34.5|ms|@0.5\n".encode(),
+            "db.event_name:34|ms|@0.5\n".encode(),
         )
 
         client.prefix = "region.c_"
         client.timing("db/query", rate=0.7, milliseconds=22.22)
         self.mock_sendall.assert_called_with(
-            "region.c_db-query:22.22|ms|@0.7\n".encode(),
+            "region.c_db-query:22|ms|@0.7\n".encode(),
         )
 
         self.mock_sendall.reset_mock()
         client.timing("low.rate", 12, rate=0.1)
         self.assertEqual(self.mock_sendall.call_count, 0)
 
-        self.assertRaises(AssertionError, client.timing, "negative", -0.5)
+        self.assertRaises(AssertionError, client.timing, "negative", -2)
 
     def test_gauge(self):
         client = self.clientClass("localhost")

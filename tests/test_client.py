@@ -7,6 +7,10 @@ unittests for statsdmetrics.client module
 import platform
 import gc
 import unittest
+from time import time, sleep
+
+from datetime import datetime
+
 try:
     import unittest.mock as mock
 except ImportError:
@@ -166,14 +170,14 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         )
         client.timing("db.event name", 34.5, 0.5)
         self.mock_sendto.assert_called_with(
-            "db.event_name:34.5|ms|@0.5".encode(),
+            "db.event_name:34|ms|@0.5".encode(),
             ("127.0.0.2", 8125)
         )
 
         client.prefix = "region.c_"
         client.timing("db/query", rate=0.7, milliseconds=22.22)
         self.mock_sendto.assert_called_with(
-            "region.c_db-query:22.22|ms|@0.7".encode(),
+            "region.c_db-query:22|ms|@0.7".encode(),
             ("127.0.0.2", 8125)
         )
 
@@ -181,7 +185,45 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         client.timing("low.rate", 12, rate=0.1)
         self.assertEqual(self.mock_sendto.call_count, 0)
 
-        self.assertRaises(AssertionError, client.timing, "negative", -0.5)
+        self.assertRaises(AssertionError, client.timing, "negative", -1)
+
+    def test_timing_since_with_timestamp_as_number(self):
+        start_time = time()
+        client = Client("localhost")
+        client._socket = self.mock_socket
+
+        self.assertRaises(AssertionError, client.timing_since, "negative", -1)
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        self.assertEqual(self.mock_sendto.call_count, 1)
+        socket_sendto_args = self.mock_sendto.call_args
+        self.assertEqual(len(socket_sendto_args), 2)
+        request, remote_address = socket_sendto_args[0]
+        self.assertRegexpMatches(request.decode(), "event:[1-9]+\d*\|ms")
+        self.assertEqual(remote_address, ("127.0.0.2", 8125))
+        self.mock_sendto.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.1)
+        self.assertEqual(self.mock_sendto.call_count, 0)
+
+    def test_timing_since_with_datetime_timestamp(self):
+        start_time = datetime.now()
+        client = Client("localhost")
+        client._socket = self.mock_socket
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        self.assertEqual(self.mock_sendto.call_count, 1)
+        socket_sendto_args = self.mock_sendto.call_args
+        self.assertEqual(len(socket_sendto_args), 2)
+        request, remote_address = socket_sendto_args[0]
+        self.assertRegexpMatches(request.decode(), "event:[1-9]\d*\|ms")
+        self.assertEqual(remote_address, ("127.0.0.2", 8125))
+        self.mock_sendto.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.1)
+        self.assertEqual(self.mock_sendto.call_count, 0)
 
     def test_gauge(self):
         client = Client("localhost")

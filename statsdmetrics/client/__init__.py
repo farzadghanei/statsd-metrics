@@ -8,6 +8,9 @@ import socket
 from abc import ABCMeta
 from random import random
 from collections import deque
+from time import time
+
+from datetime import datetime
 
 try:
     from typing import Tuple
@@ -153,8 +156,7 @@ class AbstractClient(object):
         """Send a Timer metric with the specified duration in milliseconds"""
 
         if self._should_send_metric(name, rate):
-            if not is_numeric(milliseconds):
-                milliseconds = float(milliseconds)
+            milliseconds = int(milliseconds)
             self._request(
                 Timer(
                     self._create_metric_name_for_request(name),
@@ -163,9 +165,20 @@ class AbstractClient(object):
                 ).to_request()
             )
 
+    def timing_since(self, name, start_time, rate=1):
+        # type: (str, float, float) -> None
+        """Send a Timer metric calculating the duration from the start time"""
+        duration = 0  # type: float
+        if is_numeric(start_time):
+            assert start_time > 0
+            duration = (time() - start_time) * 1000
+        elif isinstance(start_time, datetime):
+            duration = (datetime.now(start_time.tzinfo) - start_time).total_seconds() * 1000
+        self.timing(name, duration, rate)
+
     def gauge(self, name, value, rate=1):
         # type: (str, float, float) -> None
-        """Send a Gauge metric with the specified vlaue"""
+        """Send a Gauge metric with the specified value"""
 
         if self._should_send_metric(name, rate):
             if not is_numeric(value):
