@@ -8,20 +8,19 @@ import platform
 import gc
 import unittest
 from time import time, sleep
-
+import threading
 from datetime import datetime
 
 try:
     import unittest.mock as mock
 except ImportError:
     import mock
-import threading
 
 from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
-from . import MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
+from . import TestCase, MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
 
 
-class TestSharedSocket(MockMixIn, unittest.TestCase):
+class TestSharedSocket(MockMixIn, TestCase):
 
     def setUp(self):
         self.doMock()
@@ -98,7 +97,7 @@ class TestSharedSocket(MockMixIn, unittest.TestCase):
         self.assertEqual(self.mock_close.call_count, 1)
 
 
-class TestClient(ClientTestCaseMixIn, unittest.TestCase):
+class TestClient(ClientTestCaseMixIn, TestCase):
 
     def test_increment(self):
         client = Client("localhost")
@@ -200,7 +199,7 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         socket_sendto_args = self.mock_sendto.call_args
         self.assertEqual(len(socket_sendto_args), 2)
         request, remote_address = socket_sendto_args[0]
-        self.assertRegexpMatches(request.decode(), "event:[1-9]+\d*\|ms")
+        self.assertRegex(request.decode(), "event:[1-9]+\d*\|ms")
         self.assertEqual(remote_address, ("127.0.0.2", 8125))
         self.mock_sendto.reset_mock()
 
@@ -218,7 +217,7 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         socket_sendto_args = self.mock_sendto.call_args
         self.assertEqual(len(socket_sendto_args), 2)
         request, remote_address = socket_sendto_args[0]
-        self.assertRegexpMatches(request.decode(), "event:[1-9]\d*\|ms")
+        self.assertRegex(request.decode(), "event:[1-9]\d*\|ms")
         self.assertEqual(remote_address, ("127.0.0.2", 8125))
         self.mock_sendto.reset_mock()
 
@@ -332,7 +331,7 @@ class TestClient(ClientTestCaseMixIn, unittest.TestCase):
         self.assertFalse(sock.closed)
 
 
-class TestBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
+class TestBatchClient(BatchClientTestCaseMixIn, TestCase):
 
     def setUp(self):
         super(TestBatchClient, self).setUp()
