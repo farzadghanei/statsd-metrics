@@ -25,7 +25,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.clientClass = TCPClient
 
     def test_increment(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
         client.increment("event")
         self.mock_sendall.assert_called_with("event:1|c\n".encode())
@@ -33,7 +33,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.mock_sendall.assert_called_with("region.event_name:2|c|@0.5\n".encode())
 
     def test_decrement(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
         client.decrement("event")
         self.mock_sendall.assert_called_with(
@@ -49,7 +49,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         )
 
     def test_timing(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
         client.timing("event", 10)
         self.mock_sendall.assert_called_with(
@@ -74,7 +74,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
 
     def test_timing_since_with_timestamp_as_number(self):
         start_time = time()
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
 
         self.assertRaises(AssertionError, client.timing_since, "negative", -1)
@@ -93,7 +93,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
 
     def test_timing_since_with_datetime_timestamp(self):
         start_time = datetime.now()
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
 
         sleep(0.01)
@@ -109,7 +109,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.assertEqual(self.mock_sendall.call_count, 0)
 
     def test_gauge(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
         client.gauge("memory", 10240)
         self.mock_sendall.assert_called_with(
@@ -129,7 +129,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.assertRaises(AssertionError, client.gauge, "negative", -5)
 
     def test_gauge_delta(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
         client.gauge_delta("memory!", 128)
         self.mock_sendall.assert_called_with("memory:+128|g\n".encode())
@@ -145,7 +145,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.assertEqual(self.mock_sendall.call_count, 0)
 
     def test_set(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         client._socket = self.mock_socket
         client.set("ip address", "10.10.10.1")
         self.mock_sendall.assert_called_with(
@@ -163,7 +163,7 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.assertEqual(self.mock_sendall.call_count, 0)
 
     def test_when_client_is_removed_the_socket_batch_client_socket_is_not_closed(self):
-        client = self.clientClass("localhost")
+        client = TCPClient("localhost")
         batch_client = client.batch_client()
         sock = batch_client._socket
         del client
@@ -258,7 +258,7 @@ class TestTCPBatchClient(BatchClientTestCaseMixIn, TestCase):
 
     def test_timing_since_with_datetime_timestamp(self):
         start_time = datetime.now()
-        client = self.clientClass("localhost")
+        client = TCPBatchClient("localhost")
         client._socket = self.mock_socket
 
         sleep(0.01)
