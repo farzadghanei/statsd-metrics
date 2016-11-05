@@ -199,7 +199,7 @@ class TestClient(ClientTestCaseMixIn, TestCase):
         socket_sendto_args = self.mock_sendto.call_args
         self.assertEqual(len(socket_sendto_args), 2)
         request, remote_address = socket_sendto_args[0]
-        self.assertRegex(request.decode(), "event:[1-9]+\d*\|ms")
+        self.assertRegex(request.decode(), "event:[1-9]+\d{0,3}\|ms")
         self.assertEqual(remote_address, ("127.0.0.2", 8125))
         self.mock_sendto.reset_mock()
 
@@ -217,7 +217,7 @@ class TestClient(ClientTestCaseMixIn, TestCase):
         socket_sendto_args = self.mock_sendto.call_args
         self.assertEqual(len(socket_sendto_args), 2)
         request, remote_address = socket_sendto_args[0]
-        self.assertRegex(request.decode(), "event:[1-9]\d*\|ms")
+        self.assertRegex(request.decode(), "event:[1-9]\d{0,3}\|ms")
         self.assertEqual(remote_address, ("127.0.0.2", 8125))
         self.mock_sendto.reset_mock()
 
@@ -307,7 +307,7 @@ class TestClient(ClientTestCaseMixIn, TestCase):
         with client.batch_client(2048) as batch_client:
             self.assertEqual(batch_client.batch_size, 2048)
 
-    def test_context_manager_flushs_metrics(self):
+    def test_context_manager_flushes_metrics(self):
         client = Client("localhost", prefix="_.")
         client._socket = self.mock_socket
 
@@ -398,6 +398,51 @@ class TestBatchClient(BatchClientTestCaseMixIn, TestCase):
             bytearray("pre.query:3|ms\npre.query.user:350|ms|@0.6\n".encode()),
             ("127.0.0.2", 8125)
         )
+
+    def test_timing_since_with_timestamp_as_number(self):
+        start_time = time()
+        client = BatchClient("localhost")
+        client._socket = self.mock_socket
+
+        self.assertRaises(AssertionError, client.timing_since, "negative", -1)
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        client.timing_since("other_event", start_time)
+        client.flush()
+        self.assertEqual(self.mock_sendto.call_count, 1)
+        socket_sendto_args = self.mock_sendto.call_args
+        self.assertEqual(len(socket_sendto_args), 2)
+        request, remote_address = socket_sendto_args[0]
+        self.assertEqual(remote_address, ("127.0.0.2", 8125))
+        self.assertRegex(request.decode(), "event:[1-9]+\d{0,3}\|ms\nother_event:[1-9]+\d{0,3}\|ms")
+
+        self.mock_sendto.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.1)
+        client.flush()
+        self.assertEqual(self.mock_sendto.call_count, 0)
+
+    def test_timing_since_with_datetime_timestamp(self):
+        start_time = datetime.now()
+        client = BatchClient("localhost")
+        client._socket = self.mock_socket
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        client.timing_since("other_event", start_time)
+        client.flush()
+        self.assertEqual(self.mock_sendto.call_count, 1)
+        socket_sendto_args = self.mock_sendto.call_args
+        self.assertEqual(len(socket_sendto_args), 2)
+        request, remote_address = socket_sendto_args[0]
+        self.assertRegex(request.decode(), "event:[1-9]\d{0,3}\|ms\nother_event:[1-9]\d{0,3}\|ms")
+        self.assertEqual(remote_address, ("127.0.0.2", 8125))
+        self.mock_sendto.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.1)
+        client.flush()
+        self.assertEqual(self.mock_sendto.call_count, 0)
 
     def test_gauge(self):
         client = BatchClient("localhost")

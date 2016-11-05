@@ -6,16 +6,19 @@ unittests for statsdmetrics.client module
 
 import gc
 import unittest
+from datetime import datetime
+from time import time, sleep
+
 try:
     import unittest.mock as mock
 except ImportError:
     import mock
 
 from statsdmetrics.client.tcp import TCPClient, TCPBatchClient
-from . import ClientTestCaseMixIn, BatchClientTestCaseMixIn
+from . import ClientTestCaseMixIn, BatchClientTestCaseMixIn, TestCase
 
 
-class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
+class TestTCPClient(ClientTestCaseMixIn, TestCase):
 
     def setUp(self):
         super(TestTCPClient, self).setUp()
@@ -68,6 +71,42 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         self.assertEqual(self.mock_sendall.call_count, 0)
 
         self.assertRaises(AssertionError, client.timing, "negative", -2)
+
+    def test_timing_since_with_timestamp_as_number(self):
+        start_time = time()
+        client = self.clientClass("localhost")
+        client._socket = self.mock_socket
+
+        self.assertRaises(AssertionError, client.timing_since, "negative", -1)
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        self.assertEqual(self.mock_sendall.call_count, 1)
+        socket_sendall_args = self.mock_sendall.call_args[0]
+        self.assertEqual(len(socket_sendall_args), 1)
+        request = socket_sendall_args[0]
+        self.assertRegex(request.decode(), "event:[1-9]+\d*\|ms")
+        self.mock_sendall.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.1)
+        self.assertEqual(self.mock_sendall.call_count, 0)
+
+    def test_timing_since_with_datetime_timestamp(self):
+        start_time = datetime.now()
+        client = self.clientClass("localhost")
+        client._socket = self.mock_socket
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        self.assertEqual(self.mock_sendall.call_count, 1)
+        socket_sendall_args = self.mock_sendall.call_args[0]
+        self.assertEqual(len(socket_sendall_args), 1)
+        request = socket_sendall_args[0]
+        self.assertRegex(request.decode(), "event:[1-9]\d*\|ms")
+        self.mock_sendall.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.01)
+        self.assertEqual(self.mock_sendall.call_count, 0)
 
     def test_gauge(self):
         client = self.clientClass("localhost")
@@ -132,7 +171,7 @@ class TestTCPClient(ClientTestCaseMixIn, unittest.TestCase):
         self.assertFalse(sock.closed)
 
 
-class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
+class TestTCPBatchClient(BatchClientTestCaseMixIn, TestCase):
 
     def setUp(self):
         super(TestTCPBatchClient, self).setUp()
@@ -194,6 +233,48 @@ class TestTCPBatchClient(BatchClientTestCaseMixIn, unittest.TestCase):
         self.mock_sendall.assert_called_once_with(
             bytearray("pre.query:3|ms\npre.query.user:350|ms|@0.6\n".encode())
         )
+
+    def test_timing_since_with_timestamp_as_number(self):
+        start_time = time()
+        client = TCPBatchClient("localhost")
+        client._socket = self.mock_socket
+
+        self.assertRaises(AssertionError, client.timing_since, "negative", -1)
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        client.timing_since("other_event", start_time)
+        client.flush()
+        self.assertEqual(self.mock_sendall.call_count, 1)
+        socket_sendall_args = self.mock_sendall.call_args[0]
+        self.assertEqual(len(socket_sendall_args), 1)
+        request = socket_sendall_args[0]
+        self.assertRegex(request.decode(), "event:[1-9]+\d{0,3}\|ms\nother_event:[1-9]\d{0,3}\|ms")
+        self.mock_sendall.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.1)
+        client.flush()
+        self.assertEqual(self.mock_sendall.call_count, 0)
+
+    def test_timing_since_with_datetime_timestamp(self):
+        start_time = datetime.now()
+        client = self.clientClass("localhost")
+        client._socket = self.mock_socket
+
+        sleep(0.01)
+        client.timing_since("event", start_time)
+        client.timing_since("other_event", start_time)
+        client.flush()
+        self.assertEqual(self.mock_sendall.call_count, 1)
+        socket_sendall_args = self.mock_sendall.call_args[0]
+        self.assertEqual(len(socket_sendall_args), 1)
+        request = socket_sendall_args[0]
+        self.assertRegex(request.decode(), "event:[1-9]\d{0,3}\|ms\nother_event:[1-9]\d{0,3}\|ms")
+        self.mock_sendall.reset_mock()
+
+        client.timing_since("low.rate", start_time, rate=0.01)
+        client.flush()
+        self.assertEqual(self.mock_sendall.call_count, 0)
 
     def test_gauge(self):
         client = TCPBatchClient("localhost")

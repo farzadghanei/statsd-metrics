@@ -15,19 +15,23 @@ from __future__ import print_function
 
 import sys
 import signal
+from datetime import datetime
 from time import time, sleep
 from collections import deque
 from os.path import dirname
 from unittest import TestCase, main
 from threading import Thread
 
+import re
+
 try:
     import socketserver
 except ImportError:
     import SocketServer as socketserver  # type: ignore
 
-
-sys.path.insert(0, dirname(dirname(__file__)))
+project_dir = dirname(dirname(__file__))
+if project_dir not in sys.path:
+    sys.path.insert(0, project_dir)
 
 from statsdmetrics.client import Client, BatchClient
 
@@ -72,6 +76,8 @@ class UDPClienstTest(TestCase):
         self.__class__.server.requests.clear()
 
     def test_sending_metrics(self):
+        start = datetime.now()
+        start_timestamp = time()
         client = Client("localhost", self.__class__.port)
         client.increment("1.test", 5)
         client.increment("2.login")
@@ -91,9 +97,21 @@ class UDPClienstTest(TestCase):
                 "7.ip:127.0.0.1|s",
         ]
 
-        self.assertServerReceivedExpectedRequests(expected)
+        self.assert_server_received_expected_requests(expected)
+
+        self.__class__.server.requests.clear()
+        client.timing_since("1.query", start_timestamp)
+        client.timing_since("2.other_query", start)
+
+        expected_patterns = [
+            "1.query:[1-9]\d{0,4}\|ms",
+            "2.other_query:[1-9]\d{0,4}\|ms",
+        ]
+        self.assert_server_received_expected_request_regex(expected_patterns)
 
     def test_sending_batch_metrics(self):
+        start = datetime.now()
+        start_timestamp = time()
         client = BatchClient("localhost", self.__class__.port)
         client.increment("1.test", 8)
         client.increment("2.login")
@@ -114,15 +132,39 @@ class UDPClienstTest(TestCase):
                 "7.ip:127.0.0.2|s",
         ]
 
-        self.assertServerReceivedExpectedRequests(expected)
+        self.assert_server_received_expected_requests(expected)
 
-    def assertServerReceivedExpectedRequests(self, expected):
-        timeout = 3
-        starttime = time()
+        self.__class__.server.requests.clear()
+        client.timing_since("1.query", start_timestamp)
+        client.timing_since("2.other_query", start)
+        client.flush()
+        expected_patterns = [
+            "1.query:[1-9]\d{0,4}\|ms",
+            "2.other_query:[1-9]\d{0,4}\|ms",
+        ]
+        self.assert_server_received_expected_request_regex(expected_patterns)
+
+    def assert_server_received_expected_requests(self, expected, timeout=3):
+        requests = self.wait_for_requests_in_server(expected, timeout)
+        self.assertEqual(sorted(expected), sorted(requests))
+
+    def assert_server_received_expected_request_regex(self, expected_patterns, timeout=3):
+        requests = self.wait_for_requests_in_server(expected_patterns, timeout)
+        for regex_pattern in expected_patterns:
+            matched = False
+            for request in requests:
+                if re.match(regex_pattern, request):
+                    matched = True
+                    break
+            self.assertTrue(matched, "No match found for request pattern '{}'".format(regex_pattern))
+
+    def wait_for_requests_in_server(self, expected, timeout):
+        start_time = time()
         server = self.__class__.server
-        while len(server.requests) < len(expected) and time() - starttime < timeout:
+        while len(server.requests) < len(expected) and time() - start_time < timeout:
             sleep(0.2)
-        self.assertEqual(expected, sorted(server.requests))
+        return server.requests
+
 
 if __name__ == '__main__':
     main()

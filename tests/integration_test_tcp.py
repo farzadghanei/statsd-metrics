@@ -15,12 +15,15 @@ from __future__ import print_function
 
 import sys
 import signal
+from datetime import datetime
 from time import time, sleep
 from collections import deque
 from os.path import dirname
 from unittest import TestCase, main
 from threading import Thread
 from multiprocessing import Process, Pipe
+
+import re
 
 try:
     import socketserver
@@ -98,6 +101,8 @@ class TCPClienstTest(TestCase):
         cls.shutdown_server()
 
     def test_sending_metrics(self):
+        start = datetime.now()
+        start_timestamp = time()
         client = TCPClient("localhost", self.__class__.port)
         client.increment("1.test", 5)
         client.increment("2.login")
@@ -117,9 +122,20 @@ class TCPClienstTest(TestCase):
                 "7.ip:127.0.0.1|s",
         ]
 
-        self.assertServerReceivedExpectedRequests(expected)
+        self.assert_server_received_expected_requests(expected)
+
+        client.timing_since("1.query", start_timestamp)
+        client.timing_since("2.other_query", start)
+
+        expected_patterns = [
+            "1.query:[1-9]\d{0,4}\|ms",
+            "2.other_query:[1-9]\d{0,4}\|ms",
+        ]
+        self.assert_server_received_expected_request_regex(expected_patterns)
 
     def test_sending_batch_metrics(self):
+        start = datetime.now()
+        start_timestamp = time()
         client = TCPBatchClient("localhost", self.__class__.port)
         client.increment("1.test", 8)
         client.increment("2.login")
@@ -140,10 +156,33 @@ class TCPClienstTest(TestCase):
                 "7.ip:127.0.0.2|s",
         ]
 
-        self.assertServerReceivedExpectedRequests(expected)
+        self.assert_server_received_expected_requests(expected)
 
-    def assertServerReceivedExpectedRequests(self, expected):
-        timeout = 3
+        client.timing_since("1.query", start_timestamp)
+        client.timing_since("2.other_query", start)
+        client.flush()
+
+        expected_patterns = [
+            "1.query:[1-9]\d{0,4}\|ms",
+            "2.other_query:[1-9]\d{0,4}\|ms",
+        ]
+        self.assert_server_received_expected_request_regex(expected_patterns)
+
+    def assert_server_received_expected_requests(self, expected):
+        requests = self.wait_for_requests_in_server(expected)
+        self.assertEqual(sorted(expected), sorted(requests))
+
+    def assert_server_received_expected_request_regex(self, expected_patterns, timeout=3):
+        requests = self.wait_for_requests_in_server(expected_patterns, timeout)
+        for regex_pattern in expected_patterns:
+            matched = False
+            for request in requests:
+                if re.match(regex_pattern, request):
+                    matched = True
+                    break
+            self.assertTrue(matched, "No match found for request pattern '{}'".format(regex_pattern))
+
+    def wait_for_requests_in_server(self, expected, timeout=3):
         start_time = time()
         server_pipe = self.__class__.control_pipe
         requests = []
@@ -158,7 +197,7 @@ class TCPClienstTest(TestCase):
                     requests.extend(server_requests)
             if len(requests) >= len(expected):
                 break
-        self.assertEqual(sorted(expected), sorted(requests))
+        return requests
 
 
 if __name__ == '__main__':
