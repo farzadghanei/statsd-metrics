@@ -12,10 +12,10 @@ try:
 except ImportError:
     import mock
 
-from . import TestCase
+from . import BaseTestCase
 
 
-class TestTimer(TestCase):
+class BaseTestTimer(BaseTestCase):
     def setUp(self):
         self.client = Client('127.0.0.1')
         self.request_mock = mock.MagicMock()

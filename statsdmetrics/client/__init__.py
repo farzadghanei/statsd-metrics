@@ -169,11 +169,11 @@ class AbstractClient(object):
         # type: (str, Union[float, datetime], float) -> None
         """Send a Timer metric calculating the duration from the start time"""
         duration = 0  # type: float
-        if is_numeric(start_time):
+        if isinstance(start_time, datetime):
+            duration = (datetime.now(start_time.tzinfo) - start_time).total_seconds() * 1000
+        elif is_numeric(start_time):
             assert start_time > 0
             duration = (time() - start_time) * 1000
-        elif isinstance(start_time, datetime):
-            duration = (datetime.now(start_time.tzinfo) - start_time).total_seconds() * 1000
         else:
             raise ValueError("start time should be a timestamp or a datetime")
         self.timing(name, duration, rate)

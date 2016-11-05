@@ -15,13 +15,13 @@ except ImportError:
     import mock
 
 from statsdmetrics.client.tcp import TCPClient, TCPBatchClient
-from . import ClientTestCaseMixIn, BatchClientTestCaseMixIn, TestCase
+from . import ClientTestCaseMixIn, BatchClientTestCaseMixIn, BaseTestCase
 
 
-class TestTCPClient(ClientTestCaseMixIn, TestCase):
+class BaseTestTCPClient(ClientTestCaseMixIn, BaseTestCase):
 
     def setUp(self):
-        super(TestTCPClient, self).setUp()
+        super(BaseTestTCPClient, self).setUp()
         self.clientClass = TCPClient
 
     def test_increment(self):
@@ -171,10 +171,10 @@ class TestTCPClient(ClientTestCaseMixIn, TestCase):
         self.assertFalse(sock.closed)
 
 
-class TestTCPBatchClient(BatchClientTestCaseMixIn, TestCase):
+class BaseTestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
 
     def setUp(self):
-        super(TestTCPBatchClient, self).setUp()
+        super(BaseTestTCPBatchClient, self).setUp()
         self.clientClass = TCPBatchClient
 
     def test_increment(self):

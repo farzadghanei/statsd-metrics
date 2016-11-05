@@ -17,10 +17,10 @@ except ImportError:
     import mock
 
 from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
-from . import TestCase, MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
+from . import BaseTestCase, MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
 
 
-class TestSharedSocket(MockMixIn, TestCase):
+class BaseTestSharedSocket(MockMixIn, BaseTestCase):
 
     def setUp(self):
         self.doMock()
@@ -97,7 +97,7 @@ class TestSharedSocket(MockMixIn, TestCase):
         self.assertEqual(self.mock_close.call_count, 1)
 
 
-class TestClient(ClientTestCaseMixIn, TestCase):
+class BaseTestClient(ClientTestCaseMixIn, BaseTestCase):
 
     def test_increment(self):
         client = Client("localhost")
@@ -226,6 +226,7 @@ class TestClient(ClientTestCaseMixIn, TestCase):
 
     def test_timing_since_with_none_float_datetimes_fails(self):
         client = Client("localhost")
+
         self.assertRaises(ValueError, client.timing_since, "event", "string")
         self.assertRaises(ValueError, client.timing_since, "event", None)
         self.assertRaises(ValueError, client.timing_since, "event", self)
@@ -338,10 +339,10 @@ class TestClient(ClientTestCaseMixIn, TestCase):
         self.assertFalse(sock.closed)
 
 
-class TestBatchClient(BatchClientTestCaseMixIn, TestCase):
+class BaseTestBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
 
     def setUp(self):
-        super(TestBatchClient, self).setUp()
+        super(BaseTestBatchClient, self).setUp()
         self.clientClass = BatchClient
 
     def test_increment(self):

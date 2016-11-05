@@ -103,11 +103,8 @@ class BatchClientTestCaseMixIn(ClientTestCaseMixIn):
             client.batch_size = 512
 
 
-class TestCase(unittest.TestCase):
+class BaseTestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         unittest.TestCase.__init__(self, *args, **kwargs)
         if not hasattr(self, 'assertRegex'):
             self.assertRegex = self.assertRegexpMatches
-
-
-__all__ = ['TestCase', 'BatchClientTestCaseMixIn', 'ClientTestCaseMixIn', 'MockMixIn']
