@@ -224,6 +224,13 @@ class TestClient(ClientTestCaseMixIn, TestCase):
         client.timing_since("low.rate", start_time, rate=0.1)
         self.assertEqual(self.mock_sendto.call_count, 0)
 
+    def test_timing_since_with_none_float_datetimes_fails(self):
+        client = Client("localhost")
+        self.assertRaises(ValueError, client.timing_since, "event", "string")
+        self.assertRaises(ValueError, client.timing_since, "event", None)
+        self.assertRaises(ValueError, client.timing_since, "event", self)
+        self.assertRaises(ValueError, client.timing_since, "event", client)
+
     def test_gauge(self):
         client = Client("localhost")
         client._socket = self.mock_socket

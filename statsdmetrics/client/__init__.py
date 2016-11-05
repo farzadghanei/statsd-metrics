@@ -13,9 +13,9 @@ from time import time
 from datetime import datetime
 
 try:
-    from typing import Tuple
+    from typing import Tuple, Union
 except ImportError:
-    Tuple = None
+    Tuple, Union = None, None
 
 from ..metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
                        normalize_metric_name, is_numeric)
@@ -166,7 +166,7 @@ class AbstractClient(object):
             )
 
     def timing_since(self, name, start_time, rate=1):
-        # type: (str, float, float) -> None
+        # type: (str, Union[float, datetime], float) -> None
         """Send a Timer metric calculating the duration from the start time"""
         duration = 0  # type: float
         if is_numeric(start_time):
@@ -174,6 +174,8 @@ class AbstractClient(object):
             duration = (time() - start_time) * 1000
         elif isinstance(start_time, datetime):
             duration = (datetime.now(start_time.tzinfo) - start_time).total_seconds() * 1000
+        else:
+            raise ValueError("start time should be a timestamp or a datetime")
         self.timing(name, duration, rate)
 
     def gauge(self, name, value, rate=1):
