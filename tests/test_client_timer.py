@@ -15,7 +15,7 @@ except ImportError:
 from . import BaseTestCase
 
 
-class BaseTestTimer(BaseTestCase):
+class TestTimer(BaseTestCase):
     def setUp(self):
         self.client = Client('127.0.0.1')
         self.request_mock = mock.MagicMock()
@@ -39,7 +39,7 @@ class BaseTestTimer(BaseTestCase):
     
         self.assertEqual(
             self.timer.time_callable("event", self.wait_a_while),
-            self.timer
+            "waited"
         )
         self.assertEqual(self.request_mock.call_count, 1)
         request_args = self.request_mock.call_args[0]
@@ -48,7 +48,7 @@ class BaseTestTimer(BaseTestCase):
         self.assertRegex(request, "event:[1-9]\d{0,3}\|ms")
     
         self.request_mock.reset_mock()
-        self.timer.time_callable("low.rate", self.wait_a_while, rate=0.1)
+        self.timer.time_callable("low.rate", self.wait_a_while, rate=0.0001)
         self.assertEqual(self.request_mock.call_count, 0)
 
         args_passed = []
@@ -66,7 +66,36 @@ class BaseTestTimer(BaseTestCase):
         (request,) = request_args
         self.assertRegex(request, "with_args:[1-9]\d{0,3}\|ms")
         self.assertEqual(args_passed, [("arg1", "arg2"), dict(named_arg="named_value")])
-    
+
+    def test_timer_function_decorator(self):
+        nap_calls = []
+
+        @self.timer.wrap(name="event")
+        def take_a_nap():
+            nap_calls.append("nap called")
+            sleep(0.1)
+
+        take_a_nap()
+        self.assertEqual(nap_calls, ["nap called"])
+        self.assertEqual(self.request_mock.call_count, 1)
+        request_args = self.request_mock.call_args[0]
+        self.assertEqual(len(request_args), 1)
+        request = request_args[0]
+        self.assertRegex(request, "event:[1-9]\d{0,3}\|ms")
+
+        self.request_mock.reset_mock()
+        nap_low_rate_calls = []
+
+        @self.timer.wrap("event", 0.001)
+        def nap_low_rate():
+            nap_low_rate_calls.append("low rate called")
+            sleep(0.01)
+
+        nap_low_rate()
+        self.assertEqual(nap_low_rate_calls, ["low rate called"])
+        self.assertEqual(self.request_mock.call_count, 0)
+
     def wait_a_while(self):
         sleep(0.01)
+        return "waited"
 
