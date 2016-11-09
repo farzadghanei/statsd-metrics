@@ -18,10 +18,10 @@ from statsdmetrics.client.tcp import TCPClient, TCPBatchClient
 from . import ClientTestCaseMixIn, BatchClientTestCaseMixIn, BaseTestCase
 
 
-class BaseTestTCPClient(ClientTestCaseMixIn, BaseTestCase):
+class TestTCPClient(ClientTestCaseMixIn, BaseTestCase):
 
     def setUp(self):
-        super(BaseTestTCPClient, self).setUp()
+        super(TestTCPClient, self).setUp()
         self.clientClass = TCPClient
 
     def test_increment(self):
@@ -171,10 +171,10 @@ class BaseTestTCPClient(ClientTestCaseMixIn, BaseTestCase):
         self.assertFalse(sock.closed)
 
 
-class BaseTestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
+class TestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
 
     def setUp(self):
-        super(BaseTestTCPBatchClient, self).setUp()
+        super(TestTCPBatchClient, self).setUp()
         self.clientClass = TCPBatchClient
 
     def test_increment(self):

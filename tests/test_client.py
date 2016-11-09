@@ -20,7 +20,7 @@ from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
 from . import BaseTestCase, MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
 
 
-class BaseTestSharedSocket(MockMixIn, BaseTestCase):
+class TestSharedSocket(MockMixIn, BaseTestCase):
 
     def setUp(self):
         self.doMock()
@@ -97,7 +97,7 @@ class BaseTestSharedSocket(MockMixIn, BaseTestCase):
         self.assertEqual(self.mock_close.call_count, 1)
 
 
-class BaseTestClient(ClientTestCaseMixIn, BaseTestCase):
+class TestClient(ClientTestCaseMixIn, BaseTestCase):
 
     def test_increment(self):
         client = Client("localhost")
@@ -339,10 +339,10 @@ class BaseTestClient(ClientTestCaseMixIn, BaseTestCase):
         self.assertFalse(sock.closed)
 
 
-class BaseTestBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
+class TestBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
 
     def setUp(self):
-        super(BaseTestBatchClient, self).setUp()
+        super(TestBatchClient, self).setUp()
         self.clientClass = BatchClient
 
     def test_increment(self):
