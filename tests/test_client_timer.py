@@ -167,6 +167,12 @@ class TestStopWatch(BaseTestCase):
         stop_watch.client = self.client
         self.assertEqual(stop_watch.client, self.client)
 
+    def test_reset(self):
+        original_reference = self.stop_watch.reference
+        sleep(0.01)
+        self.assertEqual(self.stop_watch.reset(), self.stop_watch)
+        self.assertGreater(self.stop_watch.reference, original_reference)
+
     def test_send(self):
         sleep(0.01)
         self.stop_watch.send()
@@ -178,4 +184,21 @@ class TestStopWatch(BaseTestCase):
 
         self.request_mock.reset_mock()
         self.stop_watch.send(rate=0)
+        self.assertEqual(self.request_mock.call_count, 0)
+
+    def test_stop_watch_as_context_manager(self):
+        original_reference = self.stop_watch.reference
+        with self.stop_watch:
+            sleep(0.01)
+        self.assertGreater(self.stop_watch.reference, original_reference, "stop watch as context manager resets")
+        self.assertEqual(self.request_mock.call_count, 1)
+        request_args = self.request_mock.call_args[0]
+        self.assertEqual(len(request_args), 1)
+        request = request_args[0]
+        self.assertRegex(request, "timed_event:[1-9]\d{0,3}\|ms")
+
+        self.request_mock.reset_mock()
+        stop_watch = StopWatch(self.client, "low_rate", rate=0)
+        with stop_watch:
+            sleep(0.01)
         self.assertEqual(self.request_mock.call_count, 0)

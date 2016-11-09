@@ -146,3 +146,10 @@ class StopWatch(ClientWrapper, SampleRateMixIn):
             assert_sample_rate(rate)
         self.client.timing_since(self._name, self._reference, rate)
         return self
+
+    def __enter__(self):
+        self.reset()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.send()
