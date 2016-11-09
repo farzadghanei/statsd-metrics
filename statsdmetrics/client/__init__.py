@@ -17,6 +17,7 @@ try:
 except ImportError:
     Tuple, Union = None, None
 
+from .timing import Timer as TimingTimer
 from ..metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
                        normalize_metric_name, is_numeric)
 
@@ -221,6 +222,9 @@ class AbstractClient(object):
                     rate
                 ).to_request()
             )
+
+    def create_timer(self):
+        return TimingTimer(self)
 
     def _create_metric_name_for_request(self, name):
         # type: (str) -> str

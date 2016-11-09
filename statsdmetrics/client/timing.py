@@ -7,8 +7,6 @@ import functools
 from datetime import datetime
 from time import time
 
-from statsdmetrics.client import AbstractClient
-
 try:
     from typing import Union, Callable, Any
 except ImportError:
@@ -28,19 +26,14 @@ def assert_sample_rate(rate):
 
 class ClientWrapper(object):
     def __init__(self, client):
-        # type (AbstractClient) -> None
-        assert isinstance(client, AbstractClient)
         self._client = client
 
     @property
     def client(self):
-        # type: () -> AbstractClient
         return self._client
 
     @client.setter
     def client(self, client):
-        # type: (AbstractClient) -> None
-        assert isinstance(client, AbstractClient)
         self._client = client
 
 
@@ -63,7 +56,7 @@ class SampleRateMixIn(object):
 
 class Timer(ClientWrapper, SampleRateMixIn):
     def __init__(self, client, rate=1):
-        # type: (AbstractClient, float) -> None
+        # type: (Any, float) -> None
         SampleRateMixIn.__init__(self, rate)
         ClientWrapper.__init__(self, client)
 
@@ -108,7 +101,7 @@ class Timer(ClientWrapper, SampleRateMixIn):
 
 class StopWatch(ClientWrapper, SampleRateMixIn):
     def __init__(self, client, name, rate=1, reference=None):
-        # type: (AbstractClient, str, float, float) -> None
+        # type: (Any, str, float, float) -> None
         if reference is None:
             reference = time()
         else:

@@ -3,12 +3,18 @@ tests
 -----
 statsdmetrics unit tests
 """
+import sys
+from os.path import dirname
 import unittest
 
 try:
     import unittest.mock as mock
 except ImportError:
     import mock
+
+project_dir = dirname(dirname(__file__))
+if project_dir not in sys.path:
+    sys.path.insert(0, project_dir)
 
 from statsdmetrics.client import Client, DEFAULT_PORT
 
