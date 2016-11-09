@@ -5,7 +5,7 @@ unit tests for timer module
 """
 from time import time, sleep
 from statsdmetrics.client import Client
-from statsdmetrics.client.timer import Timer, StopWatch
+from statsdmetrics.client.timing import Timer, StopWatch
 
 try:
     import unittest.mock as mock

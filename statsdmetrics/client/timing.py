@@ -1,6 +1,6 @@
 """
-statsdmetrics.client.timer
---------------------------
+statsdmetrics.client.timing
+---------------------------
 Easy to use classes to send timing metrics
 """
 import functools
