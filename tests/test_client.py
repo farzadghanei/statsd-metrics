@@ -580,6 +580,12 @@ class TestBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
         gc.collect()
         self.assertFalse(sock.closed)
 
+    def test_client_creates_chronometer(self):
+        client = BatchClient("localhost")
+        chronometer = client.chronometer()
+        self.assertIsInstance(chronometer, Chronometer)
+        self.assertEqual(chronometer.client, client)
+
 
 if __name__ == "__main__":
     unittest.main()

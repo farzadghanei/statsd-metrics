@@ -9,6 +9,8 @@ import unittest
 from datetime import datetime
 from time import time, sleep
 
+from statsdmetrics.client import Chronometer
+
 try:
     import unittest.mock as mock
 except ImportError:
@@ -169,6 +171,12 @@ class TestTCPClient(ClientTestCaseMixIn, BaseTestCase):
         del client
         gc.collect()
         self.assertFalse(sock.closed)
+
+    def test_client_creates_chronometer(self):
+        client = TCPClient("localhost")
+        chronometer = client.chronometer()
+        self.assertIsInstance(chronometer, Chronometer)
+        self.assertEqual(chronometer.client, client)
 
 
 class TestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
@@ -390,6 +398,12 @@ class TestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
         del batch_client
         gc.collect()
         self.assertFalse(sock.closed)
+
+    def test_client_creates_chronometer(self):
+        client = TCPBatchClient("localhost")
+        chronometer = client.chronometer()
+        self.assertIsInstance(chronometer, Chronometer)
+        self.assertEqual(chronometer.client, client)
 
 if __name__ == "__main__":
     unittest.main()
