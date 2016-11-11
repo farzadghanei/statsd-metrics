@@ -17,7 +17,7 @@ except ImportError:
     import mock
 
 from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
-from statsdmetrics.client.timing import Timer, StopWatch
+from statsdmetrics.client.timing import Chronometer, StopWatch
 from . import BaseTestCase, MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
 
 
@@ -339,11 +339,11 @@ class TestClient(ClientTestCaseMixIn, BaseTestCase):
         gc.collect()
         self.assertFalse(sock.closed)
 
-    def test_client_create_timer(self):
+    def test_client_creates_chronometer(self):
         client = Client("localhost")
-        timer = client.create_timer()
-        self.assertIsInstance(timer, Timer)
-        self.assertEqual(timer.client, client)
+        chronometer = client.chronometer()
+        self.assertIsInstance(chronometer, Chronometer)
+        self.assertEqual(chronometer.client, client)
 
 
 class TestBatchClient(BatchClientTestCaseMixIn, BaseTestCase):

@@ -54,14 +54,14 @@ class SampleRateMixIn(object):
         self._rate = rate
 
 
-class Timer(ClientWrapper, SampleRateMixIn):
+class Chronometer(ClientWrapper, SampleRateMixIn):
     def __init__(self, client, rate=1):
         # type: (Any, float) -> None
         SampleRateMixIn.__init__(self, rate)
         ClientWrapper.__init__(self, client)
 
     def since(self, name, timestamp, rate=None):
-        # type (str, Union[float, datetime], float) -> Timer
+        # type (str, Union[float, datetime], float) -> Chronometer
         if rate is None:
             rate = self._rate
         else:
@@ -71,7 +71,7 @@ class Timer(ClientWrapper, SampleRateMixIn):
         return self
 
     def time_callable(self, name, target, rate=None, *args, **kwargs):
-        # type: (str, Callable, float, *Any, **Any) -> Timer
+        # type: (str, Callable, float, *Any, **Any) -> Chronometer
         """Send a Timer metric calculating duration of execution of the provided callable"""
         assert callable(target)
         if rate is None:
