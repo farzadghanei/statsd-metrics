@@ -102,10 +102,24 @@ class UDPClienstTest(TestCase):
         self.__class__.server.requests.clear()
         client.timing_since("1.query", start_timestamp)
         client.timing_since("2.other_query", start)
+        chronometer = client.chronometer()
+        chronometer.time_callable("3.sleepy", sleep, 1, 0.02)
+
+        @chronometer.wrap("4.wait_a_sec")
+        def wait_a_sec():
+            sleep(0.01)
+
+        wait_a_sec()
+
+        with client.stopwatch("5.my_with_block"):
+            sleep(0.02)
 
         expected_patterns = [
             "1.query:[1-9]\d{0,4}\|ms",
             "2.other_query:[1-9]\d{0,4}\|ms",
+            "3.sleepy:[1-9]\d{0,4}\|ms",
+            "4.wait_a_sec:[1-9]\d{0,4}\|ms",
+            "5.my_with_block:[1-9]\d{0,4}\|ms",
         ]
         self.assert_server_received_expected_request_regex(expected_patterns)
 
@@ -138,9 +152,27 @@ class UDPClienstTest(TestCase):
         client.timing_since("1.query", start_timestamp)
         client.timing_since("2.other_query", start)
         client.flush()
+
+        chronometer = client.chronometer()
+        chronometer.time_callable("3.sleepy", sleep, 1, 0.02)
+
+        @chronometer.wrap("4.wait_a_sec")
+        def wait_a_sec():
+            sleep(0.01)
+
+        wait_a_sec()
+
+        with client.stopwatch("5.my_with_block"):
+            sleep(0.02)
+
+        client.flush()
+
         expected_patterns = [
             "1.query:[1-9]\d{0,4}\|ms",
             "2.other_query:[1-9]\d{0,4}\|ms",
+            "3.sleepy:[1-9]\d{0,4}\|ms",
+            "4.wait_a_sec:[1-9]\d{0,4}\|ms",
+            "5.my_with_block:[1-9]\d{0,4}\|ms",
         ]
         self.assert_server_received_expected_request_regex(expected_patterns)
 

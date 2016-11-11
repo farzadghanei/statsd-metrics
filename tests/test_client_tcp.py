@@ -9,7 +9,7 @@ import unittest
 from datetime import datetime
 from time import time, sleep
 
-from statsdmetrics.client import Chronometer
+from statsdmetrics.client import Chronometer, Stopwatch
 
 try:
     import unittest.mock as mock
@@ -177,6 +177,33 @@ class TestTCPClient(ClientTestCaseMixIn, BaseTestCase):
         chronometer = client.chronometer()
         self.assertIsInstance(chronometer, Chronometer)
         self.assertEqual(chronometer.client, client)
+
+    def test_client_creates_stopwatch(self):
+        test_start_timestamp = time()
+        one_minute_before_test = test_start_timestamp - 60
+        client = TCPClient("localhost")
+        client._socket = self.mock_socket
+        stopwatch = client.stopwatch("event")
+        self.assertIsInstance(stopwatch, Stopwatch)
+        self.assertEqual(stopwatch.client, client)
+        self.assertEqual(stopwatch.rate, 1)
+        self.assertGreaterEqual(stopwatch.reference, test_start_timestamp)
+
+        stopwatch_low_rate = client.stopwatch("low_rate", rate=0.001)
+        self.assertEqual(stopwatch_low_rate.rate, 0.001)
+        self.assertGreaterEqual(stopwatch.reference, test_start_timestamp)
+
+        stopwatch_1min_ref = client.stopwatch("low_rate", reference=one_minute_before_test)
+        self.assertGreaterEqual(test_start_timestamp, stopwatch_1min_ref.reference)
+
+        with client.stopwatch("something"):
+            sleep(0.01)
+
+        self.assertEqual(self.mock_sendall.call_count, 1)
+        request_args = self.mock_sendall.call_args[0]
+        self.assertEqual(len(request_args), 1)
+        request = request_args[0]
+        self.assertRegex(request.decode(), "something:[1-9]\d{0,3}\|ms")
 
 
 class TestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
@@ -404,6 +431,35 @@ class TestTCPBatchClient(BatchClientTestCaseMixIn, BaseTestCase):
         chronometer = client.chronometer()
         self.assertIsInstance(chronometer, Chronometer)
         self.assertEqual(chronometer.client, client)
+
+    def test_client_creates_stopwatch(self):
+        test_start_timestamp = time()
+        one_minute_before_test = test_start_timestamp - 60
+        client = TCPBatchClient("localhost")
+        client._socket = self.mock_socket
+        stopwatch = client.stopwatch("event")
+        self.assertIsInstance(stopwatch, Stopwatch)
+        self.assertEqual(stopwatch.client, client)
+        self.assertEqual(stopwatch.rate, 1)
+        self.assertGreaterEqual(stopwatch.reference, test_start_timestamp)
+
+        stopwatch_low_rate = client.stopwatch("low_rate", rate=0.001)
+        self.assertEqual(stopwatch_low_rate.rate, 0.001)
+        self.assertGreaterEqual(stopwatch.reference, test_start_timestamp)
+
+        stopwatch_1min_ref = client.stopwatch("low_rate", reference=one_minute_before_test)
+        self.assertGreaterEqual(test_start_timestamp, stopwatch_1min_ref.reference)
+
+        with client.stopwatch("something"):
+            sleep(0.01)
+
+        self.assertEqual(self.mock_sendall.call_count, 0)
+        client.flush()
+        self.assertEqual(self.mock_sendall.call_count, 1)
+        request_args = self.mock_sendall.call_args[0]
+        self.assertEqual(len(request_args), 1)
+        request = request_args[0]
+        self.assertRegex(request.decode(), "something:[1-9]\d{0,3}\|ms")
 
 if __name__ == "__main__":
     unittest.main()

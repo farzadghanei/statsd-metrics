@@ -17,7 +17,7 @@ try:
 except ImportError:
     Tuple, Union = None, None
 
-from .timing import Chronometer
+from .timing import Chronometer, Stopwatch
 from ..metrics import (Counter, Timer, Gauge, GaugeDelta, Set,
                        normalize_metric_name, is_numeric)
 
@@ -226,6 +226,10 @@ class AbstractClient(object):
     def chronometer(self):
         # type: () -> Chronometer
         return Chronometer(self)
+
+    def stopwatch(self, name, rate=1, reference=None):
+        # type: (str, float, float) -> Stopwatch
+        return Stopwatch(self, name, rate, reference)
 
     def _create_metric_name_for_request(self, name):
         # type: (str) -> str
