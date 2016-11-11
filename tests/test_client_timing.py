@@ -5,7 +5,7 @@ unit tests for timer module
 """
 from time import time, sleep
 from statsdmetrics.client import Client
-from statsdmetrics.client.timing import Chronometer, StopWatch
+from statsdmetrics.client.timing import Chronometer, Stopwatch
 
 try:
     import unittest.mock as mock
@@ -134,48 +134,48 @@ class TestChronometer(BaseTestCase):
         return "waited"
 
 
-class TestStopWatch(BaseTestCase):
+class TestStopwatch(BaseTestCase):
     def setUp(self):
         self.client = Client('127.0.0.1')
         self.request_mock = mock.MagicMock()
         self.client._request = self.request_mock
         self.metric_name = "timed_event"
-        self.stop_watch = StopWatch(self.client, self.metric_name)
+        self.stopwatch = Stopwatch(self.client, self.metric_name)
 
     def test_name(self):
-        stop_watch = StopWatch(self.client, "new_watch")
-        self.assertEqual(stop_watch.name, "new_watch")
-        stop_watch.name = self.metric_name
-        self.assertEqual(stop_watch.name, self.metric_name)
+        stopwatch = Stopwatch(self.client, "new_watch")
+        self.assertEqual(stopwatch.name, "new_watch")
+        stopwatch.name = self.metric_name
+        self.assertEqual(stopwatch.name, self.metric_name)
 
     def test_sample_rate_configuration(self):
-        self.assertEqual(self.stop_watch.rate, 1)
-        stop_watch = StopWatch(self.client, "new_watch", rate=0.3)
-        self.assertEqual(stop_watch.rate, 0.3)
+        self.assertEqual(self.stopwatch.rate, 1)
+        stopwatch = Stopwatch(self.client, "new_watch", rate=0.3)
+        self.assertEqual(stopwatch.rate, 0.3)
         with self.assertRaises(AssertionError):
-            stop_watch.rate = "not a number"
+            stopwatch.rate = "not a number"
         with self.assertRaises(AssertionError):
-            stop_watch.rate = 2
+            stopwatch.rate = 2
         with self.assertRaises(AssertionError):
-            stop_watch.rate = -0.3
+            stopwatch.rate = -0.3
 
     def test_get_set_client(self):
-        self.assertEqual(self.stop_watch.client, self.client)
+        self.assertEqual(self.stopwatch.client, self.client)
         client = Client('127.0.0.2')
-        stop_watch = StopWatch(client, "new_watch")
-        self.assertEqual(stop_watch.client, client)
-        stop_watch.client = self.client
-        self.assertEqual(stop_watch.client, self.client)
+        stopwatch = Stopwatch(client, "new_watch")
+        self.assertEqual(stopwatch.client, client)
+        stopwatch.client = self.client
+        self.assertEqual(stopwatch.client, self.client)
 
     def test_reset(self):
-        original_reference = self.stop_watch.reference
+        original_reference = self.stopwatch.reference
         sleep(0.01)
-        self.assertEqual(self.stop_watch.reset(), self.stop_watch)
-        self.assertGreater(self.stop_watch.reference, original_reference)
+        self.assertEqual(self.stopwatch.reset(), self.stopwatch)
+        self.assertGreater(self.stopwatch.reference, original_reference)
 
     def test_send(self):
         sleep(0.01)
-        self.stop_watch.send()
+        self.stopwatch.send()
         self.assertEqual(self.request_mock.call_count, 1)
         request_args = self.request_mock.call_args[0]
         self.assertEqual(len(request_args), 1)
@@ -183,14 +183,14 @@ class TestStopWatch(BaseTestCase):
         self.assertRegex(request, "timed_event:[1-9]\d{0,3}\|ms")
 
         self.request_mock.reset_mock()
-        self.stop_watch.send(rate=0)
+        self.stopwatch.send(rate=0)
         self.assertEqual(self.request_mock.call_count, 0)
 
-    def test_stop_watch_as_context_manager(self):
-        original_reference = self.stop_watch.reference
-        with self.stop_watch:
+    def test_stopwatch_as_context_manager(self):
+        original_reference = self.stopwatch.reference
+        with self.stopwatch:
             sleep(0.01)
-        self.assertGreater(self.stop_watch.reference, original_reference, "stop watch as context manager resets")
+        self.assertGreater(self.stopwatch.reference, original_reference, "stop watch as context manager resets")
         self.assertEqual(self.request_mock.call_count, 1)
         request_args = self.request_mock.call_args[0]
         self.assertEqual(len(request_args), 1)
@@ -198,7 +198,7 @@ class TestStopWatch(BaseTestCase):
         self.assertRegex(request, "timed_event:[1-9]\d{0,3}\|ms")
 
         self.request_mock.reset_mock()
-        stop_watch = StopWatch(self.client, "low_rate", rate=0)
-        with stop_watch:
+        stopwatch = Stopwatch(self.client, "low_rate", rate=0)
+        with stopwatch:
             sleep(0.01)
         self.assertEqual(self.request_mock.call_count, 0)

@@ -99,7 +99,7 @@ class Chronometer(ClientWrapper, SampleRateMixIn):
         return create_decorator
 
 
-class StopWatch(ClientWrapper, SampleRateMixIn):
+class Stopwatch(ClientWrapper, SampleRateMixIn):
     def __init__(self, client, name, rate=1, reference=None):
         # type: (Any, str, float, float) -> None
         if reference is None:
@@ -126,13 +126,13 @@ class StopWatch(ClientWrapper, SampleRateMixIn):
         self._name = str(name)
 
     def reset(self):
-        # type: () -> StopWatch
+        # type: () -> Stopwatch
         """Reset stop watch by setting now as reference"""
         self._reference = time()
         return self
 
     def send(self, rate=None):
-        # type: (float) -> StopWatch
+        # type: (float) -> Stopwatch
         if rate is None:
             rate = self._rate
         else:

@@ -17,7 +17,7 @@ except ImportError:
     import mock
 
 from statsdmetrics.client import (AutoClosingSharedSocket, Client, BatchClient)
-from statsdmetrics.client.timing import Chronometer, StopWatch
+from statsdmetrics.client.timing import Chronometer, Stopwatch
 from . import BaseTestCase, MockMixIn, ClientTestCaseMixIn, BatchClientTestCaseMixIn
 
 
