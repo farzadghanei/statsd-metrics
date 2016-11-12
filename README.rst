@@ -65,6 +65,7 @@ Send Statsd requests
 
     from statsdmetrics.client import Client
 
+    # default client, send metrics over UDP
     client = Client("stats.example.org")
     client.increment("login")
     client.decrement("connections", 2)
@@ -72,6 +73,20 @@ Send Statsd requests
     client.gauge("memory", 20480)
     client.gauge_delta("memory", -256)
     client.set("unique.ip_address", "10.10.10.1")
+
+    # helpers for timing operations
+    chronometer = client.chronometer()
+    chronometer.time_callable("func1_duration", func1)
+
+    # decorate functions to send timing metrics for the duration of their running time
+    @chronometer.wrap("func2_duration")
+    def func2():
+        pass
+
+    # send timing for duration of a with block
+    with client.stopwatch("with_block_duration"):
+        pass
+
 
 
 Sending multiple metrics in batch requests by ``BatchClient``, either
@@ -101,6 +116,19 @@ or by creating a ``BatchClient`` object explicitly:
     client.set("unique.ip_address", "10.10.10.1")
     client.gauge("memory", 20480)
     client.flush() # sends one UDP packet to remote server, carrying both metrics
+
+    # timing helpers are available on all clients
+    chronometer = client.chronometer()
+    chronometer.time_callable("func1_duration", func1)
+
+    @chronometer.wrap("func2_duration")
+    def func2():
+        pass
+
+    with client.stopwatch("with_block_duration"):
+        pass
+
+    client.flush()
 
 
 Installation
