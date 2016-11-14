@@ -146,3 +146,5 @@ class Stopwatch(ClientWrapper, SampleRateMixIn):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.send()
+
+__all__= ['Chronometer', 'Stopwatch']
