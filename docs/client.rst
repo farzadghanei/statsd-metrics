@@ -73,6 +73,15 @@ in the :mod:`client` package and :mod:`client.tcp` module.
         This batch client could be used as a context manager in a ``with`` statement. After the ``with``
         block when the context manager exits, all the metrics are flushed to the server in batch requests.
 
+    .. method:: chronometer()
+
+        Create a :class:`client.timing.Chronometer` that uses current client to send
+        timing metrics.
+
+    .. method:: stopwatch(name [, rate=1, reference=None])
+
+        Create a :class:`client.timing.Stopwatch` that uses current client to send
+        timing metrics.
 
 .. note::
 

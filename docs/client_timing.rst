@@ -18,7 +18,7 @@ Classes to help measure time and send :class:`metrics.Timer` metrics using any :
     Chronometer calculates duration (of function calls, etc.) and
     sends them with provided metric names.
     Normally these is no need to instanciate this class directly, but
-    you can call :method:`client.Client.chronometer` on any client, to
+    you can call :meth:`client.Client.chronometer` on any client, to
     get a configured Chronometer.
 
     .. data:: client
@@ -39,9 +39,9 @@ Classes to help measure time and send :class:`metrics.Timer` metrics using any :
         or a :class:`datetime.datetime` instance.
         Rate is the sample rate to use, or None to use the default sample rate of the Chronometer.
 
-    .. method:: time_calllable(name, target, [rate=None], [\*args], [\*\*kwargs])
+    .. method:: time_calllable(name, target[, rate=None, args=(), kwargs={}])
 
-        Calculate the time it takes to run the callable `target` (with provided \*args and \*\*kwargs)
+        Calculate the time it takes to run the callable `target` (with provided args and kwargs)
         and send the a :class:`~metrics.Timer` metric with the specific name.
         Rate is the sample rate to use, or None to use the default sample rate of the Chronometer.
 
@@ -70,7 +70,7 @@ Examples
     def wait(secs):
         sleep(secs) # or any timed operation
 
-    chronometer.time_calllable("waited", wait, 1, 0.56)
+    chronometer.time_calllable("waited", wait, args=(0.56,))
 
     @chronometer.wrap("wait_decorated")
     def another_wait(secs):
@@ -97,6 +97,47 @@ is used, then the behavior of the client requires an explicit `flush()` call.
     def wait_with_kwargs(name, key=val):
         sleep(1) # or any timed operation
 
-    chronometer.time_calllable("waited", wait_with_kwargs, 1, name="foo", key="bar")
+    chronometer.time_calllable("waited", wait_with_kwargs, kwargs=dict(name="foo", key="bar"))
     client.flush()
+
+
+.. class:: Stopwatch(client, name, [rate=1, reference=None])
+
+    Stopwatch calculates duration passed from a given reference time (by default uses
+    the instantiation time) for a specific metric name.
+    So time passed since the reference time can be sent multiple times.
+    Normally these is no need to instanciate this class directly, but
+    you can call :meth:`client.Client.stopwatch` on any client, to
+    get a configured Chronometer.
+
+    .. data:: client
+
+        The client used to send the timing metrics. This can be any client
+        from :mod:`client` package.
+
+    .. data:: name
+
+        The name for the metric sent by the stopwatch.
+
+    .. data:: rate
+
+        The default sample rate for metrics to send. Should be a float between 0 and 1.
+        This is the same as used in all clients.
+
+    .. data:: reference
+
+        The time reference that duration is calculated from. It's a float value
+        of seconds passed since epoch, same as `time.time()`.
+
+    .. method:: reset()
+
+        Reset the stopwatch, updating the reference with current time.
+        Returns a self reference for method chaining.
+
+    .. method:: send([rate=None])
+
+        Calculate time passed since :attr:`reference` and send the metric.
+        A sampling rate can be specified, or `None` (default) uses the default
+        sampling rate of the stopwatch.
+        Returns a self reference for method chaining.
 

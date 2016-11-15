@@ -39,9 +39,10 @@ Clients
 * :class:`~client.tcp.TCPClient`: Sends request on each call using TCP
 * :class:`~client.tcp.TCPBatchClient`: Buffers metrics and flushes them in batch requests using TCP
 
-Easy Timing
------------
+Timing Helpers
+--------------
 * :class:`~client.timing.Chronometer`: Measure duration and send multiple :class:`~metrics.Timer` metrics
+* :class:`~client.timing.Stopwatch`: Measure time passed from a given reference and send :class:`~metrics.Timer` metrics with a specific name
 
 Installation
 ============
