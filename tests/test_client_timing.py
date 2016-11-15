@@ -83,7 +83,7 @@ class TestChronometer(BaseTestCase):
             sleep(0.01)
     
         self.request_mock.reset_mock()
-        self.chronometer.time_callable("with_args", store_args, 1, "arg1", "arg2", named_arg="named_value")
+        self.chronometer.time_callable("with_args", store_args, 1, ("arg1", "arg2"), dict(named_arg="named_value"))
         self.assertEqual(self.request_mock.call_count, 1)
         request_args = self.request_mock.call_args[0]
         self.assertEqual(len(request_args), 1)
