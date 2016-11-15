@@ -8,9 +8,9 @@ from datetime import datetime
 from time import time
 
 try:
-    from typing import Union, Callable, Any
+    from typing import Union, Callable, Any, Tuple, Dict
 except ImportError:
-    Union, Callable, Any = None, None, None  # type: ignore
+    Union, Callable, Any, Tuple, Dict = None, None, None, None, None  # type: ignore
 
 
 def assert_timestamp(timestamp):
@@ -70,8 +70,8 @@ class Chronometer(ClientWrapper, SampleRateMixIn):
         self._client.timing_since(name, timestamp, rate)
         return self
 
-    def time_callable(self, name, target, rate=None, *args, **kwargs):
-        # type: (str, Callable, float, *Any, **Any) -> Chronometer
+    def time_callable(self, name, target, rate=None, args=(), kwargs={}):
+        # type: (str, Callable, float, Tuple, Dict) -> Chronometer
         """Send a Timer metric calculating duration of execution of the provided callable"""
         assert callable(target)
         if rate is None:
@@ -94,7 +94,7 @@ class Chronometer(ClientWrapper, SampleRateMixIn):
             # type: (Callable) -> Callable
             @functools.wraps(func)
             def decorator(*args, **kwargs):
-                return self.time_callable(name, func, rate, *args, **kwargs)
+                return self.time_callable(name, func, rate, args, kwargs)
             return decorator
         return create_decorator
 

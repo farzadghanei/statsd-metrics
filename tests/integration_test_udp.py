@@ -103,7 +103,7 @@ class UDPClienstTest(TestCase):
         client.timing_since("1.query", start_timestamp)
         client.timing_since("2.other_query", start)
         chronometer = client.chronometer()
-        chronometer.time_callable("3.sleepy", sleep, 1, 0.02)
+        chronometer.time_callable("3.sleepy", sleep, 1, (0.02,))
 
         @chronometer.wrap("4.wait_a_sec")
         def wait_a_sec():
@@ -154,7 +154,7 @@ class UDPClienstTest(TestCase):
         client.flush()
 
         chronometer = client.chronometer()
-        chronometer.time_callable("3.sleepy", sleep, 1, 0.02)
+        chronometer.time_callable("3.sleepy", sleep, 1, (0.02,))
 
         @chronometer.wrap("4.wait_a_sec")
         def wait_a_sec():
