@@ -14,12 +14,18 @@ Contents:
 Introduction
 ============
 
-Statsd metrics is an API to create, parse or send metrics to a Statsd server.
+Metric classes for Statsd, and Statsd clients (each metric in a single request, or send batch requests).
+Provides APIs to create, parse or send metrics to a Statsd server.
+
+
+The library also comes with a rich set of Statsd clients using the same metric classes, and
+Python standard library socket module.
 
 Metric Classes
 --------------
-Metric classes are used to define the data type and values for each metric,
-and to create the contents of the request that will be setn to the Statsd server.
+Metric classes represent the data used in Statsd protocol excluding the IO, to create,
+represent and parse Statsd requests. So any Statsd server and client regardless of the
+IO implementation can use them to send/receive Statsd requests.
 
 Available metrics:
 
@@ -34,6 +40,8 @@ and return the corresponding metric object. This could be used on the server sid
 
 Clients
 -------
+A rich set of Statsd clients using the same metric classes, and Python standard library socket module.
+
 * :class:`~client.Client`: Default client, sends request on each call using UDP
 * :class:`~client.BatchClient`: Buffers metrics and flushes them in batch requests using UDP
 * :class:`~client.tcp.TCPClient`: Sends request on each call using TCP
@@ -54,13 +62,13 @@ Installation
 
 Dependencies
 ------------
-There are no specific dependencies, it runs on Python 2.7+ (CPython 2.7, 3.2, 3.3
-3.4 and 3.5, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
+The only dependencies are Python 2.7+ and setuptools.
+CPython 2.7, 3.2, 3.3, 3.4, 3.5, 3.6-dev, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
 
 However on development (and test) environment
-`mock <https://pypi.python.org/pypi/mock>`__ is required, and
-`distutilazy <https://pypi.python.org/pypi/distutilazy>`_
-(or setuptools as a fallback) is used to run the tests.
+`mock <https://pypi.python.org/pypi/mock>`_ is required,
+`typing <https://pypi.python.org/pypi/typing>`_ and
+`distutilazy <https://pypi.python.org/pypi/distutilazy>`_ are recommended.
 
 .. code-block:: bash
 
