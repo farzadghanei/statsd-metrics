@@ -13,11 +13,11 @@ Classes to help measure time and send :class:`metrics.Timer` metrics using any :
 
 .. moduleauthor:: Farzad Ghanei
 
-.. class:: Chronometer(client, [rate=1])
+.. class:: Chronometer(client, rate=1)
 
     Chronometer calculates duration (of function calls, etc.) and
     sends them with provided metric names.
-    Normally these is no need to instanciate this class directly, but
+    Normally these is no need to instantiate this class directly, but
     you can call :meth:`client.Client.chronometer` on any client, to
     get a configured Chronometer.
 
@@ -31,7 +31,7 @@ Classes to help measure time and send :class:`metrics.Timer` metrics using any :
         the default sample rate for metrics to send. Should be a float between 0 and 1.
         This is the same as used in all clients.
 
-    .. method:: since(name, timestamp, [rate=None])
+    .. method:: since(name, timestamp, rate=None)
 
         Calculate the time passed since the given timestamp, and send
         a :class:`~metrics.Timer` metric with the provided name.
@@ -39,15 +39,15 @@ Classes to help measure time and send :class:`metrics.Timer` metrics using any :
         or a :class:`datetime.datetime` instance.
         Rate is the sample rate to use, or None to use the default sample rate of the Chronometer.
 
-    .. method:: time_calllable(name, target[, rate=None, args=(), kwargs={}])
+    .. method:: time_callable(name, target, rate=None, args=(), kwargs={})
 
         Calculate the time it takes to run the callable `target` (with provided args and kwargs)
         and send the a :class:`~metrics.Timer` metric with the specific name.
         Rate is the sample rate to use, or None to use the default sample rate of the Chronometer.
 
-    .. method:: wrap(name, , [rate=None])
+    .. method:: wrap(name, rate=None)
 
-        Used as a function decorator, to calculae the time it takes
+        Used as a function decorator, to calculate the time it takes
         to run the decorated function, and send a :class:`~metrics.Timer` metric
         with the specified name.
         Rate is the sample rate to use, or None to use the default sample rate of the Chronometer.
@@ -59,7 +59,7 @@ Examples
 .. code-block:: python
 
     from time import time, sleep
-    from statsdmetrics.cllient import Client
+    from statsdmetrics.client import Client
     from statsdmetrics.client.timing import Chronometer
 
     start_time = time()
@@ -70,7 +70,7 @@ Examples
     def wait(secs):
         sleep(secs) # or any timed operation
 
-    chronometer.time_calllable("waited", wait, args=(0.56,))
+    chronometer.time_callable("waited", wait, args=(0.56,))
 
     @chronometer.wrap("wait_decorated")
     def another_wait(secs):
@@ -86,7 +86,7 @@ is used, then the behavior of the client requires an explicit `flush()` call.
 .. code-block:: python
 
     from datetime import datetime
-    from statsdmetrics.cllient.tcp import TCPBatchCPClient
+    from statsdmetrics.client.tcp import TCPBatchCPClient
     from statsdmetrics.client.timing import Chronometer
 
     start_time = datetime.now()
@@ -97,16 +97,16 @@ is used, then the behavior of the client requires an explicit `flush()` call.
     def wait_with_kwargs(name, key=val):
         sleep(1) # or any timed operation
 
-    chronometer.time_calllable("waited", wait_with_kwargs, kwargs=dict(name="foo", key="bar"))
+    chronometer.time_callable("waited", wait_with_kwargs, kwargs=dict(name="foo", key="bar"))
     client.flush()
 
 
-.. class:: Stopwatch(client, name, [rate=1, reference=None])
+.. class:: Stopwatch(client, name, rate=1, reference=None)
 
     Stopwatch calculates duration passed from a given reference time (by default uses
     the instantiation time) for a specific metric name.
     So time passed since the reference time can be sent multiple times.
-    Normally these is no need to instanciate this class directly, but
+    Normally these is no need to instantiate this class directly, but
     you can call :meth:`client.Client.stopwatch` on any client, to
     get a configured Chronometer.
 
@@ -134,7 +134,7 @@ is used, then the behavior of the client requires an explicit `flush()` call.
         Reset the stopwatch, updating the reference with current time.
         Returns a self reference for method chaining.
 
-    .. method:: send([rate=None])
+    .. method:: send(rate=None)
 
         Calculate time passed since :attr:`reference` and send the metric.
         A sampling rate can be specified, or `None` (default) uses the default

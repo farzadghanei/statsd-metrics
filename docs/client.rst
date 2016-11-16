@@ -13,7 +13,7 @@ in the :mod:`client` package and :mod:`client.tcp` module.
     :synopsis: Define Statsd client classes
 .. moduleauthor:: Farzad Ghanei
 
-.. class:: Client(host, [port=8125], [prefix=''])
+.. class:: Client(host, port=8125, prefix='')
 
     Default Statsd client that sends each metric in a separate UDP request
 
@@ -33,41 +33,41 @@ in the :mod:`client` package and :mod:`client.tcp` module.
 
         tuple of resolved server address (host, port). This property is **readonly**.
 
-    .. method:: increment(name, [count=1], [rate=1])
+    .. method:: increment(name, count=1, rate=1)
 
         Increase a :class:`~metrics.Counter` metric by ``count`` with an integer value.
         An optional sample rate can be specified.
 
-    .. method:: decrement(name, [count=1], [rate=1])
+    .. method:: decrement(name, count=1, rate=1)
 
         Decrease a :class:`~metrics.Counter` metric by ``count`` with an integer value.
         An optional sample rate can be specified.
 
-    .. method:: timing(name, milliseconds, [rate=1])
+    .. method:: timing(name, milliseconds, rate=1)
 
         Send a :class:`~metrics.Timer` metric for the duration of a task in milliseconds. The ``milliseconds``
         should be a none-negative numeric value.
         An optional sample rate can be specified.
 
-    .. method:: gauge(name, value, [rate=1])
+    .. method:: gauge(name, value, rate=1)
 
         Send a :class:`~metrics.Gauge` metric with the specified value. The ``value`` should be a none-negative
         numeric value.
         An optional sample rate can be specified.
 
-    .. method:: set(name, value, [rate=1])
+    .. method:: set(name, value, rate=1)
 
         Send a :class:`~metrics.Set` metric with the specified value. The server will count the number of unique
         values during each sampling period. The ``value`` could be any value that can be converted
         to a string.
         An optional sample rate can be specified.
 
-    .. method:: gauge_delta(name, delta, [rate=1])
+    .. method:: gauge_delta(name, delta, rate=1)
 
         Send a :class:`~metrics.GaugeDelta` metric with the specified delta. The ``delta`` should be
         a numeric value. An optional sample rate can be specified.
 
-    .. method:: batch_client([size=512])
+    .. method:: batch_client(size=512)
 
         Create a :class:`~BatchClient` object, using the same configurations of current client.
         This batch client could be used as a context manager in a ``with`` statement. After the ``with``
@@ -78,7 +78,7 @@ in the :mod:`client` package and :mod:`client.tcp` module.
         Create a :class:`client.timing.Chronometer` that uses current client to send
         timing metrics.
 
-    .. method:: stopwatch(name [, rate=1, reference=None])
+    .. method:: stopwatch(name, rate=1, reference=None)
 
         Create a :class:`client.timing.Stopwatch` that uses current client to send
         timing metrics.
@@ -116,7 +116,7 @@ Examples
     # now all metrics are flushed automatically in batch requests
 
 
-.. class:: BatchClient(host, [port=8125], [prefix=''], [batch_size=512])
+.. class:: BatchClient(host, port=8125, prefix='', batch_size=512)
 
     Statsd client that buffers all metrics and sends them in batch requests
     over UDP when instructed to flush the metrics explicitly.
@@ -164,7 +164,7 @@ Examples
     :synopsis: Define Statsd client classes that send metrics over TCP
 .. moduleauthor:: Farzad Ghanei
 
-.. class:: TCPClient(host, [port=8125], [prefix=''])
+.. class:: TCPClient(host, port=8125, prefix='')
 
     Statsd client that sends each metric in separate requests over TCP.
 
@@ -195,7 +195,7 @@ Examples
     # now all metrics are flushed automatically in batch requests
 
 
-.. class:: TCPBatchClient(host, [port=8125], [prefix=''], [batch_size=512])
+.. class:: TCPBatchClient(host, port=8125, prefix='', batch_size=512)
 
     Statsd client that buffers all metrics and sends them in batch requests
     over TCP when instructed to flush the metrics explicitly.
