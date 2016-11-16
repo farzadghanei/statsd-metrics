@@ -13,7 +13,7 @@ Statsd Metrics
 
 Metric classes for Statsd, and Statsd clients (each metric in a single request, or send batch requests).
 
-Metric classes represent the data used in Statsd protocol excluging the IO, to create,
+Metric classes represent the data used in Statsd protocol excluding the IO, to create,
 represent and parse Statsd requests. So any Statsd server and client regardless of the
 IO implementation can use them to send/receive Statsd requests.
 
