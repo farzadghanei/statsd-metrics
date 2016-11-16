@@ -99,7 +99,7 @@ is used, then the behavior of the client requires an explicit `flush()` call.
 
     chronometer.time_callable("waited", wait_with_kwargs, kwargs=dict(name="foo", key="bar"))
     client.flush()
-
+    
 
 .. class:: Stopwatch(client, name, rate=1, reference=None)
 
@@ -141,3 +141,55 @@ is used, then the behavior of the client requires an explicit `flush()` call.
         sampling rate of the stopwatch.
         Returns a self reference for method chaining.
 
+Examples
+--------
+
+.. code-block:: python
+
+    from time import time, sleep
+    from statsdmetrics.client import Client
+    from statsdmetrics.client.timing import Stopwatch
+
+    start_time = time()
+    client = Client("stats.example.org")
+    stopwatch = Stopwatch(client, "process", start_time)
+
+    sleep(2) # do stuff
+    stopwatch.send()
+    sleep(1) # do other stuff
+    stopwatch.send()
+
+
+If a batch client (like :class:`client.BatchClient` or :class:`client.tcp.TCPBatchClient`)
+is used, then the behavior of the client requires an explicit `flush()` call.
+
+.. code-block:: python
+
+    from datetime import datetime
+    from statsdmetrics.client.tcp import TCPBatchCPClient
+    from statsdmetrics.client.timing import Stopwatch
+
+    start_time = time()
+    client = TCPBatchClient("stats.example.org")
+    stopwatch = Stopwatch(client, "process", start_time)
+
+    sleep(3) # do stuff
+    stopwatch.send()
+    sleep(1) # do other stuff
+    stopwatch.send()
+
+    client.flush()
+
+Stopwatch is a context manager, so can be used to measure duration of a `with` block
+
+.. code-block:: python
+
+    from time import time, sleep
+    from statsdmetrics.client import Client
+    from statsdmetrics.client.timing import Stopwatch
+
+    client = Client("stats.example.org")
+    with client.stopwatch("some_block"):
+        sleep(3) # do stuff in the context
+
+    # now a Timer metric named "some_block" is sent, whose value is the duration of the block
