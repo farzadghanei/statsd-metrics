@@ -13,9 +13,9 @@ if __name__ == '__main__':
     if is_py32:
         print("coverage.py does not support Python 3.2.", file=sys.stderr)
         print("Running tests without coverage ...", file=sys.stderr)
-        subprocess.call("python setup.py test", shell=True)
+        subprocess.call("pytest", shell=True)
     elif no_coverage != '':
         print("Running tests without coverage ...", file=sys.stderr)
-        subprocess.call("python setup.py test", shell=True)
+        subprocess.call("pytest", shell=True)
     else:
-        subprocess.call("coverage run setup.py test", shell=True)
+        subprocess.call("pytest --cov=statsdmetrics --cov-report=html", shell=True)
