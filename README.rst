@@ -5,9 +5,6 @@ Statsd Metrics
 .. image:: https://travis-ci.org/farzadghanei/statsd-metrics.svg?branch=master
     :target: https://travis-ci.org/farzadghanei/statsd-metrics
 
-.. image:: https://codecov.io/gh/farzadghanei/statsd-metrics/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/farzadghanei/statsd-metrics
-
 .. image:: https://ci.appveyor.com/api/projects/status/bekwcg8n1xe0w0n9/branch/master?svg=true
     :target: https://ci.appveyor.com/project/farzadghanei/statsd-metrics?branch=master
 
