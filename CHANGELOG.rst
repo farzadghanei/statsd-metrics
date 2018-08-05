@@ -4,7 +4,7 @@ Statsd Metrics Changelog
 
 2.0.0
 -----
-Released on ?
+Released on 2018-08-05
 
 * Improved tests
 * Use pytest, tox for testing
