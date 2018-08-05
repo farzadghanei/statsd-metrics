@@ -2,6 +2,10 @@
 statsdmetrics.metrics
 ----------------------
 Define metric classes
+
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 
 from abc import ABCMeta, abstractmethod

@@ -2,6 +2,10 @@
 statsdmetrics.client.timing
 ---------------------------
 Easy to use classes to send timing metrics
+
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 import functools
 from datetime import datetime

@@ -2,6 +2,10 @@
 tests.test_client
 -----------------
 unittests for statsdmetrics.client module
+
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 
 import platform

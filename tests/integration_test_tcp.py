@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 tests.integration_test_tcp
 ==========================
@@ -9,6 +8,9 @@ Integration tests for the TCP clients.
 Setup a TCP server to receive metrics from the
 TCP clients and assert they are correct.
 
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 
 from __future__ import print_function

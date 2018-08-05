@@ -1,14 +1,15 @@
 #!/usr/bin/env python
-
 """
 tests.integration_test_udp
 ==========================
-
 Integration tests for the UDP client.
 
 Setup a UDP server to receive metrics from the
 UDP clients and assert they are correct.
 
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 
 from __future__ import print_function

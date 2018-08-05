@@ -2,6 +2,10 @@
 tests.test_client_timer
 -----------------------
 unit tests for timer module
+
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 from time import time, sleep
 from statsdmetrics.client import Client

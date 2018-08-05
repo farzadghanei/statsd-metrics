@@ -2,6 +2,10 @@
 statsdmetrics.client.tcp
 ------------------------
 Statsd clients to send metrics to server over TCP
+
+:license: released under the terms of the MIT license.
+For more information see LICENSE or README files, or
+https://opensource.org/licenses/MIT.
 """
 
 import socket
