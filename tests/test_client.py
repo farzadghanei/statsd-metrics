@@ -316,7 +316,7 @@ class TestClient(ClientTestCaseMixIn, BaseTestCase):
         with client.batch_client(2048) as batch_client:
             self.assertEqual(batch_client.batch_size, 2048)
 
-    def test_context_manager_flushes_metrics(self):
+    def test_context_manager_flushes_metrics_when_context_ends(self):
         client = Client("localhost", prefix="_.")
         client._socket = self.mock_socket
 
@@ -328,6 +328,23 @@ class TestClient(ClientTestCaseMixIn, BaseTestCase):
 
         expected_calls = [
                 mock.call(bytearray("_.event:1|c|@0.5\n_.query:1200|ms\n".encode()), ("127.0.0.2", 8125)),
+        ]
+        self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
+
+    def test_context_manager_flushes_metrics_when_context_raises_errors(self):
+        client = Client("localhost", prefix="_.")
+        client._socket = self.mock_socket
+
+        with self.assertRaises(RuntimeError):
+            with client.batch_client() as batch_client:
+                batch_client.increment("event", rate=0.5)
+                batch_client.timing("query", 300)
+                self.assertEqual(self.mock_sendto.call_count, 0)
+                raise RuntimeError('mock error')
+                batch_client.timing("not.there", 300)
+
+        expected_calls = [
+            mock.call(bytearray("_.event:1|c|@0.5\n_.query:300|ms\n".encode()), ("127.0.0.2", 8125)),
         ]
         self.assertEqual(self.mock_sendto.mock_calls, expected_calls)
 
