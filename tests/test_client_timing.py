@@ -175,7 +175,7 @@ class TestStopwatch(BaseTestCase):
         original_reference = self.stopwatch.reference
         sleep(0.01)
         self.assertEqual(self.stopwatch.reset(), self.stopwatch)
-        self.assertGreater(self.stopwatch.reference, original_reference)
+        self.assertGreaterEqual(self.stopwatch.reference, original_reference)
 
     def test_send(self):
         sleep(0.01)
@@ -194,7 +194,7 @@ class TestStopwatch(BaseTestCase):
         original_reference = self.stopwatch.reference
         with self.stopwatch:
             sleep(0.01)
-        self.assertGreater(self.stopwatch.reference, original_reference, "stop watch as context manager resets")
+        self.assertGreaterEqual(self.stopwatch.reference, original_reference, "stop watch as context manager resets")
         self.assertEqual(self.request_mock.call_count, 1)
         request_args = self.request_mock.call_args[0]
         self.assertEqual(len(request_args), 1)
