@@ -14,7 +14,7 @@ from .metrics import (Counter, Timer, Gauge,
                       parse_metric_from_request,
                       )
 
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 __all__ = ['Counter', 'Timer', 'Gauge',
            'Set', 'GaugeDelta',

@@ -2,7 +2,7 @@
 Statsd Metrics Changelog
 ************************
 
-2.0.1
+2.0.2
 -----
 Released on 2018-08-05
 
