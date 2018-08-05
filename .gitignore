@@ -1,3 +1,5 @@
+*.swp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -41,6 +43,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+.pytest_cache/
 
 # Translations
 *.mo
@@ -57,3 +60,7 @@ target/
 
 .idea
 .idea/*
+
+# ctags
+tags
+.tags
