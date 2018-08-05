@@ -7,7 +7,7 @@ clean:
 	python setup.py clean
 
 test:
-	python setup.py test
+	pytest
 
 dist:
 	python setup.py bdist_wheel sdist

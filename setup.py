@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 statsdmetrics
 --------------
@@ -18,7 +17,6 @@ except ImportError:
     Dict, Any = None, None  # type: ignore
 
 try:
-    import distutilazy.test  # type: ignore
     import distutilazy.clean  # type: ignore
 except ImportError:
     distutilazy = None  # type: ignore
@@ -65,11 +63,10 @@ setup_params = dict(
     zip_safe=True
 )  # type: Dict[str, Any]
 
-setup_params["extras_require"] = {"dev": ["distutilazy>=0.4.2", "mock", "typing"]}
+setup_params["extras_require"] = {"dev": ["pytest", "mock", "typing"]}
 
 if distutilazy:
     setup_params["cmdclass"] = dict(
-        test=distutilazy.test.run_tests,
         clean_pyc=distutilazy.clean.clean_pyc,
         clean=distutilazy.clean.clean_all
     )
