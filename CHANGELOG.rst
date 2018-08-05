@@ -2,6 +2,12 @@
 Statsd Metrics Changelog
 ************************
 
+2.0.1
+-----
+Released on 2018-08-05
+
+* Fix packaging misconfiguration, remove tests from distribution
+
 2.0.0
 -----
 Released on 2018-08-05
