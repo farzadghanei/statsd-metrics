@@ -136,20 +136,20 @@ Installation
 
 .. code-block:: bash
 
-    pip install statsdmetrics
+    $ pip install statsdmetrics
 
 
 The only dependencies are Python 2.7+ and setuptools.
-CPython 2.7, 3.3, 3.4, 3.5, 3.6,, 3.7-dev, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
+CPython 2.7, 3.3, 3.4, 3.5, 3.6,, 3.7-dev, PyPy, and Jython 2.7 are tested)
 
 However on development (and test) environment
-`mock <https://pypi.python.org/pypi/mock>`_ is required (for Python 2),
-`typing <https://pypi.python.org/pypi/typing>`_ and is recommended.
+`pytest <https://pypi.org/project/pytest/>`_, `mock <https://pypi.org/project/mock>`_ is required (for Python 2),
+`typing <https://pypi.org/project/typing>`_ is recommended.
 
 .. code-block:: bash
 
     # on dev/test env
-    pip install -r requirements-dev.txt
+    $ pip install -r requirements-dev.txt
 
 
 Development
@@ -161,27 +161,22 @@ Development
 Tests
 ^^^^^
 
-If you have make available
+`Tox <https://pypi.org/project/tox/>`_ is most convenient to run tests with since it handles creation of virtualenvs
 
 .. code-block:: bash
 
-    make test
+    $ tox
 
-You can always use the setup.py file
+When development dependencies are installed (preferably with a virtual environment),
+tests can be run by calling `pytest`.
 
 .. code-block:: bash
 
-    python setup.py test
+    $ pytest
 
-Integration tests are available, bringing up dummy servers (but actually listening on
+Integration tests are available as part of the test suite, bringing up dummy servers (but actually listening on
 network socket) to capture requests instead of processing them. Then send some metrics and
 assert if the captured requests match the expected.
-
-.. code-block:: bash
-
-    python tests/integration_test_udp.py
-    python tests/integration_test_tcp.py
-
 
 License
 -------

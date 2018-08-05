@@ -57,27 +57,49 @@ Installation
 
 .. code-block:: bash
 
-  pip install statsdmetrics
+    $ pip install statsdmetrics
 
 
 Dependencies
 ------------
 The only dependencies are Python 2.7+ and setuptools.
-CPython 2.7, 3.2, 3.3, 3.4, 3.5, 3.6-dev, PyPy 2.6 and PyPy3 2.4, and Jython 2.7 are tested)
+CPython 2.7, 3.3, 3.4, 3.5, 3.6, 3.7-dev, PyPy and Jython are tested)
 
 However on development (and test) environment
-`mock <https://pypi.python.org/pypi/mock>`_ is required,
-`typing <https://pypi.python.org/pypi/typing>`_ and
-`distutilazy <https://pypi.python.org/pypi/distutilazy>`_ are recommended.
+`pytest <https://pypi.org/project/pytest/>`_, `mock <https://pypi.org/project/mock>`_ is required (for Python 2),
+`typing <https://pypi.org/project/typing>`_ is recommended.
 
 .. code-block:: bash
 
     # on dev/test env
-    pip install -r requirements-dev.txt
+    $ pip install -r requirements-dev.txt
+
 
 License
 =======
 Statsd metrics is released under the terms of the `MIT license <http://opensource.org/licenses/MIT>`_.
+
+The MIT License (MIT)
+
+Copyright (c) 2015-2018 Farzad Ghanei
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 Development
 ===========
