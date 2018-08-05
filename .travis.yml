@@ -1,10 +1,10 @@
 language: python
 python:
-  - "3.6-dev"
+  - "3.7-dev"
+  - "3.6"
   - "3.5"
   - "3.4"
   - "3.3"
-  - "3.2"
   - "2.7"
   - "pypy"
 
@@ -13,21 +13,21 @@ before_install:
   - pip install codecov
 
 install:
-    - "pip install wheel"
-    - "pip install -r requirements-dev.txt"
+  - "pip install wheel"
+  - "pip install -r requirements-dev.txt"
 
 script:
-    - "python run-test-coverage.py"
-    - "python tests/integration_test_udp.py"
-    - "python tests/integration_test_tcp.py"
-    - "python setup.py bdist_wheel -d dist"
+  - "python run-test-coverage.py"
+  - "python tests/integration_test_udp.py"
+  - "python tests/integration_test_tcp.py"
+  - "python setup.py bdist_wheel -d dist"
 
 after_success:
-    - codecov
-    - "pip install dist/*.whl"
-    - "python -c 'import statsdmetrics'"
-    - "python -c 'from statsdmetrics.client import Client'"
-    - "python -c 'from statsdmetrics.client.tcp import TCPClient'"
+  - codecov
+  - "pip install dist/*.whl"
+  - "python -c 'import statsdmetrics'"
+  - "python -c 'from statsdmetrics.client import Client'"
+  - "python -c 'from statsdmetrics.client.tcp import TCPClient'"
 
 notifications:
-      email: false
+  email: false
