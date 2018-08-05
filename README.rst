@@ -137,7 +137,7 @@ Installation
 
 
 The only dependencies are Python 2.7+ and setuptools.
-CPython 2.7, 3.3, 3.4, 3.5, 3.6,, 3.7-dev, PyPy, and Jython 2.7 are tested)
+CPython 2.7, 3.4+, 3.7-dev, PyPy, and Jython 2.7 are tested)
 
 However on development (and test) environment
 `pytest <https://pypi.org/project/pytest/>`_, `mock <https://pypi.org/project/mock>`_ is required (for Python 2),
